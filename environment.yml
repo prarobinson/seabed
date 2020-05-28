@@ -1,0 +1,11 @@
+name: seabed
+dependencies:
+   - python=3.7
+   - numpy
+   - scipy
+   - matplotlib
+   - pip
+   - pip:
+      - suds-py3
+      - psycopg2
+
