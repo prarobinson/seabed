@@ -1,16 +1,19 @@
-# seabed
+# SEABED
 Project for archiving dive and annotated image NOAA data
 
-Example usage:
+## Example usage:
 
+# Create seabed environment:
+>conda env create -f environment.yml
+>conda activate seabed 
 
--To upload data:
+# Upload data:
 
 >python seabed.py seabed.sql [/path/to/data] -u [user] -n [database_name]
 
 >python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL\_17\_01 -u paulr -n seabed
 
 
--To launch queries script:
+# Launch queries script:
 
 >python queries.py -n seabed -u paulr
