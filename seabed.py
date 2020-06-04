@@ -14,6 +14,7 @@ import scipy.io
 from datetime import datetime
 from argparse import ArgumentParser
 
+### TODO: do we need to do this anymore?
 # TODO: do we need to use the parsed schema to insert the sysconfig data?
 
 # make any necessary adjustments to the data before storing to database
@@ -226,7 +227,7 @@ def main(conn, tablemap, filemap, debug):
             start = time.time()
             
             for filename in fctfiles:
-               with open(os.path.join(root, filename), "r") as fctfile:
+               with open(os.path.join(root, filename), "r", encoding="latin-1") as fctfile:
                   for line in fctfile:
                      line = line.strip()
                      
@@ -244,14 +245,14 @@ def main(conn, tablemap, filemap, debug):
                            parts[i] = "nan"
                      
                      try:
-                        cursor.execute(
-                           "INSERT INTO fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (diveid, float(parts[0]), float(parts[1]), float(parts[2]), filename, parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), parts[17])
-                        )
+                     ### getting a lot of these: "not all arguments converted during string formatting" after adding filename...
+                        SQL = 'INSERT INTO fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                        cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), float(parts[2]), str(fctfile.name), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), parts[17]))
                      except Exception as e:
-                        ### TODO: at this point the entire transaction will fail so we need to back out
+                        ### we want to commit any previous executes, but then need to 
                         print("\nProblem entering FCT file", filename, "because:", e,)
-                        curs = conn.cursor()
-                        curs.execute("ROLLBACK")
+                        conn.rollback()
+                     else:
                         conn.commit()
                         continue
 
@@ -343,7 +344,7 @@ def insert_line(conn, cursor, diveid, line, table, cols, types):
       conn.rollback()
    
    ### since we might roll back we need to commit every time
-   else: 
+   else:
       conn.commit()
 
 
