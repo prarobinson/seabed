@@ -93,7 +93,7 @@ def main(conn, tablemap, filemap, debug):
          first_time = first_ctl.readline().split()[1]
          starttime = datetime.utcfromtimestamp(float(first_time))
 
-         last_ctl = open(os.path.join(root, ctlfiles[0]), 'r')
+         last_ctl = open(os.path.join(root, ctlfiles[0]), 'r', encoding="latin-1")
          for line in last_ctl:
             pass
 
@@ -134,7 +134,7 @@ def main(conn, tablemap, filemap, debug):
 
          for ctl in ctlfiles:
             ctlpath = os.path.join(root, ctl)
-            f = open(ctlpath, 'r')
+            f = open(ctlpath, 'r',encoding="latin-1")
             ### iterate over every line in CTL file, grep for 'EST', 'REF', and 'THR', and insert line into db
             print("Processing CTL: %s ..." % ctlpath)
             for line in f:
@@ -152,7 +152,7 @@ def main(conn, tablemap, filemap, debug):
          rawfiles = entry['raws']
          for raw in rawfiles:
             rawpath = os.path.join(root, raw)
-            f = open(rawpath, 'r')
+            f = open(rawpath, 'r', encoding="latin-1")
             ### iterate over every line in RAW file, grep for 'BATTERY', 'CAMERA', 'OCTANS', 'OPTODE', 'PAROSCI', 'RDI', 'THR_PORT', 'THR_STBD', and 'THR_VERT', and insert line into db
             print("Processing RAW: %s ..." % rawpath)
             for line in f:
@@ -388,7 +388,7 @@ def parse_syscfg(tablemap, filename):
       
    datas = {}
    
-   with open(filename, "r") as syscfg:
+   with open(filename, 'r') as syscfg:
       section = None
       data = {}
       
