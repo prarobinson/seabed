@@ -243,6 +243,7 @@ CREATE TABLE fct (
 	latitude DOUBLE PRECISION,
 	longitude DOUBLE PRECISION,
 	depth DOUBLE PRECISION,
+        originating_fct TEXT,
 	filename TEXT,
 	time TIMESTAMP,
 	img_area DOUBLE PRECISION,

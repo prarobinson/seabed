@@ -245,7 +245,7 @@ def main(conn, tablemap, filemap, debug):
                      
                      try:
                         cursor.execute(
-                           "INSERT INTO fct (dive_id, latitude, longitude, depth, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (diveid, float(parts[0]), float(parts[1]), float(parts[2]), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), parts[17])
+                           "INSERT INTO fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (diveid, float(parts[0]), float(parts[1]), float(parts[2]), filename, parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), parts[17])
                         )
                      except Exception as e:
                         ### TODO: at this point the entire transaction will fail so we need to back out
