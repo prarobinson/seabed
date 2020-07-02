@@ -39,7 +39,7 @@ def main(conn, tablemap, filemap, debug):
    syscfgmap = {}
    ### note we shallow copy into a list as we have to remove while iterating
    for key in list(tablemap.keys()):
-      ### TODO: handle dive camera data
+      ### TODO: handle dive camera configuration data
       # this is a bit ugly but no better way -- NOT POPPING 'camera' for now, though we may need to add it. 
       if key in ["deltaT", "blueview", "logger"]:
          syscfgmap[key] = tablemap.pop(key)
@@ -113,7 +113,7 @@ def main(conn, tablemap, filemap, debug):
             )
          
          except psycopg2.IntegrityError:
-            print("This dive has already been processed, checking for additional dives ...")
+            print("This dive appears to have been processed already (but you may want to verify!); checking for additional dives ...")
             print()
             continue
          
@@ -220,7 +220,7 @@ def main(conn, tablemap, filemap, debug):
 
 
          ### handle FCT files
-         ### TODO: identify duplicate lines?
+         ### TODO: identify and automatically skip duplicate lines? For now they simply fail and we press on...
          fctfiles = entry.get("fcts", None)
          if fctfiles and len(fctfiles) > 0:
             print("Processing %d fct file(s)" % len(fctfiles),)
@@ -249,7 +249,6 @@ def main(conn, tablemap, filemap, debug):
                         SQL = 'INSERT INTO fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                         cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), float(parts[2]), str(fctfile.name), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), parts[17]))
                      except Exception as e:
-                        ### we want to commit any previous executes, but then need to 
                         print("\nProblem entering FCT file", filename, "because:", e,)
                         conn.rollback()
                      else:
