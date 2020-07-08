@@ -166,40 +166,42 @@ def main(dbname, user):
             for row in cursor:
                org_subtype = row[1]
                org_type = row[0]
-               ### check subtype first to get most specificity
                if org_subtype:
                   taxa = get_taxa(org_subtype)
                elif org_type:
                   taxa = get_taxa(org_type)
                else:
-                  taxa = ['type and subtype not listed in db table']
+                  taxa = ["type and subtype not listed in db table"]
 
-               if taxa in org_type_list:
-                  for taxon in taxa:
+               for taxon in taxa:
+                  if taxon in org_type_dict.keys():
                      org_type_dict[taxon] += 1
-               else:
-                  org_type_list.append(taxa)
-                  for taxon in taxa:
+                  else:
                      org_type_dict[taxon] = 1
-            
-            ### give QA diagnostsics
-            print('Org_type or org_subtype not found on lookup table (check spelling):\n')
-            for idx in range(0, len(org_type_list)):
-               if org_type_list[idx][0] == 'not listed on Species lookup table':
-                  print(org_type_list[idx][1])
 
+               if taxa not in org_type_list:
+                  org_type_list.append(taxa)
+
+            ### give QA diagnostsics
             if org_type_list[0] == ['type and subtype not listed in db table']:
                org_type_list.remove(org_type_list[0])
 
-            print('\nUnique rows found on lookup table:\n')
+            print('\nUnique rows found on lookup table: (', sum([i[0]!='not listed on Species lookup table' for i in org_type_list]), ')\n')
             for idx in range(0, len(org_type_list)):
                if org_type_list[idx][0] != 'not listed on Species lookup table':
                   print(",".join([i for i in org_type_list[idx]]))
 
-            print('\nNumber of instances of each taxon:\n') 
+            print('\n\nNumber of instances of each taxon:\n') 
             org_type_dict_s = sorted(org_type_dict.items(), key=lambda x: x[1], reverse=True)
+            ### first 2 entries are '' and 'not listed on Species lookup table', so let's drop those
+            del org_type_dict_s[0:1]
             for org in org_type_dict_s:
                print(org[0], org[1])
+
+            print('\n\nOrg_type or org_subtype not found on lookup table (check spelling): (', len(org_type_list) - sum([i[0]!='not listed on Species lookup table' for i in org_type_list]), ')\n')
+            for idx in range(0, len(org_type_list)):
+               if org_type_list[idx][0] == 'not listed on Species lookup table':
+                  print(org_type_list[idx][1])
 
            ### option to update the DB with names from the Species lookup table
            #print('Would you like to change a field in the database? [y/N]')
