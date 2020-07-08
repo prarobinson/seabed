@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 import csv
 import statistics as stat
 import numpy as np
-
+from datetime import datetime, timedelta
 
 
 def get_taxa(annot):
@@ -25,6 +25,7 @@ def get_taxa(annot):
 
 def hist(data, label):
    ### takes a list of floats as 1st input, name of the data (str) as the 2nd
+   print('\nGenerating histogram...\n')
    n, bins, patches = plt.hist(x=data, bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
    plt.grid(axis='y', alpha=0.75)
    plt.xlabel('Value')
@@ -247,43 +248,67 @@ def main(dbname, user):
             cursor.execute(SQL, dive_dir)
             CTDqreturn = cursor.fetchall()
 
-            sals = [x[2] for x in CTDqreturn]
-            temps = [x[3] for x in CTDqreturn]
-            depths = [x[4] for x in CTDqreturn]
-            soss = [x[5] for x in CTDqreturn]
+            ctd_times = [x[0] for x in CTDqreturn]
+            ctd_sals = [x[2] for x in CTDqreturn]
+            ctd_temps = [x[3] for x in CTDqreturn]
+            ctd_depths = [x[4] for x in CTDqreturn]
+            ctd_soss = [x[5] for x in CTDqreturn]
             
-            ### We should truncate data from depths less than 1m
-            depths_logic = [val > 1.0 for val in depths]
+            ### This gets the OPTODE data:
+            SQL="select optode.rovtime, optode.psat, optode.conc from optode where optode.dive_id=(select id from dive where directory = %s);"
+            cursor.execute(SQL, dive_dir)
+            OPTqreturn = cursor.fetchall()
 
-            depths_trunc = [val for idx, val in enumerate(depths) if depths_logic[idx] == True]
-            temps_trunc = [val for idx, val in enumerate(temps) if depths_logic[idx] == True]
-            sals_trunc = [val for idx, val in enumerate(sals) if depths_logic[idx] == True]
+            ### Now, we need to associate psat and conc to a depth, via a close rovtime  
+            opt_times = [x[0] for x in OPTqreturn]
+            opt_psats = [x[1] for x in OPTqreturn]
+            opt_concs = [x[2] for x in OPTqreturn]
+ 
+            opt_depths = []
+            for idx, ot in enumerate(opt_times):
+               for jdx, ct in enumerate(ctd_times):
+                  if ct > ot:
+                     opt_depths.append(ctd_depths[jdx-1])
+                     break
+
+
+            shallow = 1.0
+            ### We should truncate data from depths less than 'shallow'
+            ctd_depths_logic = [val > shallow for val in ctd_depths]
+            ctd_depths_trunc = [val for idx, val in enumerate(ctd_depths) if ctd_depths_logic[idx] == True]
+            ctd_temps_trunc = [val for idx, val in enumerate(ctd_temps) if ctd_depths_logic[idx] == True]
+            ctd_sals_trunc = [val for idx, val in enumerate(ctd_sals) if ctd_depths_logic[idx] == True]
+
+            opt_depths_logic = [val > shallow for val in opt_depths]
+            opt_depths_trunc = [val for idx, val in enumerate(opt_depths) if opt_depths_logic[idx] == True]
+            opt_psats_trunc = [val for idx, val in enumerate(opt_psats) if opt_depths_logic[idx] == True]
+            opt_concs_trunc = [val for idx, val in enumerate(opt_concs) if opt_depths_logic[idx] == True]
             
             ### output some QA
             out_temps = []
-            avg_temp = stat.mean(temps_trunc)
-            sd2_temp = 2 * stat.stdev(temps_trunc)
-            for tmp in temps_trunc:
+            avg_temp = stat.mean(ctd_temps_trunc)
+            sd2_temp = 2 * stat.stdev(ctd_temps_trunc)
+            for tmp in ctd_temps_trunc:
                if tmp > avg_temp + sd2_temp:
                   out_temps.append(tmp)
                elif tmp < avg_temp - sd2_temp:
                   out_temps.append(tmp)
             if len(out_temps) > 0:
-               print("Temps recorded more than 2 SD from the mean: \n mean: ", avg_temp, "\n Anomalies: ", out_temps)
-               hist(temps_trunc, 'Temperatures')        
+               print("\nTemps recorded more than 2 SD from the mean: \n mean: ", avg_temp, "\n Anomalies: ", out_temps)
+               hist(ctd_temps_trunc, 'Temperatures')        
 
             out_sals = []
-            avg_sal = stat.mean(sals_trunc)
-            sd2_sal = 2 * stat.stdev(sals_trunc)
-            for sal in sals_trunc:
+            avg_sal = stat.mean(ctd_sals_trunc)
+            sd2_sal = 2 * stat.stdev(ctd_sals_trunc)
+            for sal in ctd_sals_trunc:
                if sal > avg_sal + sd2_sal:
                   out_sals.append(sal)
                elif sal < avg_sal - sd2_sal:
                   out_sals.append(sal)
  
             if len(out_sals) > 0:           
-               print("Salinities recorded more than 2 SD from the mean: \n mean: ", avg_sal, "\n Anomalies: ", out_sals)
-               hist(sals_trunc,'Salinities')        
+               print("\nSalinities recorded more than 2 SD from the mean: \n mean: ", avg_sal, "\n Anomalies: ", out_sals)
+               hist(ctd_sals_trunc,'Salinities')        
 
             fig, ax1 = plt.subplots()
             
@@ -291,21 +316,21 @@ def main(dbname, user):
             ax1.set_ylabel('Depth (m)')
             color = 'blue'
             ax1.set_xlabel('Temp (C)', color=color)
-            ax1.plot(temps_trunc, depths_trunc, color=color)
+            ax1.plot(ctd_temps_trunc, ctd_depths_trunc, color=color, marker='.', linestyle='None')
             ax1.tick_params(axis='x', labelcolor=color)
             
             ax2 = ax1.twiny()
             color = 'green'
             ax2.set_xlabel('Salinity (psu)', color=color)
-            ax2.plot(sals_trunc, depths_trunc, color=color)
+            ax2.plot(ctd_sals_trunc, ctd_depths_trunc, color=color, marker='.', linestyle='None')
             ax2.tick_params(axis='x', labelcolor=color)
             
-            ### Gotta add O2 from 'OPTODE' lines in RAW.AUV
-            #ax3 = ax1.twiny()
-            #color = 'red'
-            #ax3.set_xlabel('O2 (% saturation)', color=color)
-            #ax3.plot(O2s, O2_depths, color=color)
-            #ax3.tick_params(axis='x', labelcolor=color)
+            ### Gotta add O2 from 'OPTODE'. This is 'psat'
+            ax3 = ax1.twiny()
+            color = 'red'
+            ax3.set_xlabel('O2 (% saturation)', color=color)
+            ax3.plot(opt_psats_trunc, opt_depths_trunc, color=color, marker='.', linestyle='None')
+            ax3.tick_params(axis='x', labelcolor=color, pad=30)
             
             plt.gca().invert_yaxis()
             plt.show()
