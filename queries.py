@@ -272,14 +272,16 @@ def main(dbname, user):
                      break
 
 
-            shallow = 1.0
+            depth_window = input("\nPlease enter the range of depths you're interested in (e.g. 3.0, 100.0): ")
+            depth_range = [float(depth_window.split(',')[0]), float(depth_window.split(',')[1])]
+
             ### We should truncate data from depths less than 'shallow'
-            ctd_depths_logic = [val > shallow for val in ctd_depths]
+            ctd_depths_logic = [val > min(depth_range) and val < max(depth_range) for val in ctd_depths]
             ctd_depths_trunc = [val for idx, val in enumerate(ctd_depths) if ctd_depths_logic[idx] == True]
             ctd_temps_trunc = [val for idx, val in enumerate(ctd_temps) if ctd_depths_logic[idx] == True]
             ctd_sals_trunc = [val for idx, val in enumerate(ctd_sals) if ctd_depths_logic[idx] == True]
 
-            opt_depths_logic = [val > shallow for val in opt_depths]
+            opt_depths_logic = [val > min(depth_range) and val < max(depth_range) for val in opt_depths]
             opt_depths_trunc = [val for idx, val in enumerate(opt_depths) if opt_depths_logic[idx] == True]
             opt_psats_trunc = [val for idx, val in enumerate(opt_psats) if opt_depths_logic[idx] == True]
             opt_concs_trunc = [val for idx, val in enumerate(opt_concs) if opt_depths_logic[idx] == True]
@@ -333,6 +335,7 @@ def main(dbname, user):
             ax3.tick_params(axis='x', labelcolor=color, pad=30)
             
             plt.gca().invert_yaxis()
+            plt.tight_layout()
             plt.show()
 
             
