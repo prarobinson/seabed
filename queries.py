@@ -48,17 +48,18 @@ def main(dbname, user):
       prompt = "Select from the following options (or q to quit):\n\n"
       prompt += "\t 1) Show all cruise information\n"
       prompt += "\t 2) Show all dive information\n"
-      prompt += "\t 3) Show all organism types\n"
-      prompt += "\t 4) Show all organism subtypes\n"
-      prompt += "\t 5) Number of each organism subtype by dive\n"
-      prompt += "\t 6) Number of fishcount files by dive\n"
-      prompt += "\t 7) Number of images by dive\n"
-      prompt += "\t 8) Images with with more than N organism(s) identified\n"
-      prompt += "\t 9) Produce organism histograms by dive\n"
-      prompt += "\t10) Dive area surveyed by substrate\n"
-      prompt += "\t11) Plot CTD data\n"
-      prompt += "\t12) Logistical information for dives by cruise\n"
-      prompt += "\t13) Dump database as .csv files\n"
+      prompt += "\t 3) Show primary species structure (12RB)\n"
+      prompt += "\t 4) Show all organism types\n"
+      prompt += "\t 5) Show all organism subtypes\n"
+      prompt += "\t 6) Number of each organism subtype by dive\n"
+      prompt += "\t 7) Number of fishcount files by dive\n"
+      prompt += "\t 8) Number of images by dive\n"
+      prompt += "\t 9) Images with with more than N organism(s) identified\n"
+      prompt += "\t 10) Produce organism histograms by dive\n"
+      prompt += "\t11) Dive area surveyed by substrate\n"
+      prompt += "\t12) Plot CTD data\n"
+      prompt += "\t13) Logistical information for dives by cruise\n"
+      prompt += "\t14) Dump database as .csv files\n"
       prompt += "--> "
       
       while True:
@@ -94,21 +95,27 @@ def main(dbname, user):
                   results.append("%s: %s" % (col, row[i]))
                print(", ".join(results))
          
+
          elif choice == 3:
+            ### TODO: generate python structure for 12RB
+
+
+
+         elif choice == 4:
             cursor.execute("SELECT DISTINCT org_type FROM fct WHERE org_type <> '' ORDER BY org_type")
             results = []
             for row in cursor:
                results.append(row[0])
             print(", ".join(results))
             
-         elif choice == 4:
+         elif choice == 5:
             cursor.execute("SELECT DISTINCT org_subtype FROM fct WHERE org_subtype <> '' ORDER BY org_subtype")
             results = []
             for row in cursor:
                results.append(row[0])
             print(", ".join(results))
             
-         elif choice == 5:
+         elif choice == 6:
             response = input("\nEnter the dive directory (e.g., d20150917_1): ")
             dive = (response.strip(),)
             SQL='SELECT DISTINCT fct.org_subtype as Subtype FROM fct WHERE fct.dive_id=(select id from dive where directory = %s) order by Subtype;'
@@ -124,7 +131,7 @@ def main(dbname, user):
                qreturn = cursor.fetchall()
                print(result, [x[0] for x in qreturn])
          
-         elif choice == 6:
+         elif choice == 7:
             response = input("\nEnter the dive directory (e.g., d20150917_1): ")
             dive = (response.strip(),)
             SQL = "SELECT COUNT(distinct fct.originating_fct) FROM fct WHERE fct.dive_id=(select id from dive where directory = %s);"
@@ -132,7 +139,7 @@ def main(dbname, user):
             for row in cursor:
                print(row[0])
                
-         elif choice == 7:
+         elif choice == 8:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
             SQL="select count(distinct fct.filename) from fct where fct.dive_id=(select id from dive where directory = %s);"
@@ -141,7 +148,7 @@ def main(dbname, user):
             for row in qreturn:
                print(row[0])
          
-         elif choice == 8:
+         elif choice == 9:
             response = input("\nEnter minimum number of organisms: ")
             count = 1
             try:
@@ -156,7 +163,7 @@ def main(dbname, user):
             print(", ".join(results))
 
          
-         elif choice == 9:
+         elif choice == 10:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
             SQL="select fct.org_type, fct.org_subtype from fct where fct.dive_id=(select dive.id from dive where dive.directory = %s);"
@@ -208,7 +215,7 @@ def main(dbname, user):
            #print('Would you like to change a field in the database? [y/N]')
 
          
-         elif choice == 10:
+         elif choice == 11:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
             SQL="SELECT DISTINCT ON (f.filename) f.filename, f.img_area, f.dive_id, f.substrate, d.id, d.directory FROM fct f JOIN dive d on d.id = f.dive_id WHERE d.directory = %s ORDER BY f.filename, d.id;"
@@ -240,7 +247,7 @@ def main(dbname, user):
                print(row[0])
 
          
-         elif choice == 11:
+         elif choice == 12:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
             ### This gets the CTD data:
@@ -272,6 +279,8 @@ def main(dbname, user):
                      break
 
 
+
+            print("\nThis dive goes from ", min(ctd_depths),"m to ", max(ctd_depths), "m")
             depth_window = input("\nPlease enter the range of depths you're interested in (e.g. 3.0, 100.0): ")
             depth_range = [float(depth_window.split(',')[0]), float(depth_window.split(',')[1])]
 
@@ -339,7 +348,9 @@ def main(dbname, user):
             plt.show()
 
             
-         elif choice == 12:
+         elif choice == 13:
+            print('This function is not implemented yet...')
+            continue
             SQL="select cruise.id, cruise.cruise_name from cruise;"
             cursor.execute(SQL)
             #cursor.fetchall()
@@ -347,13 +358,12 @@ def main(dbname, user):
                print(row)
             response = input("\nPlease enter a cruise_id from the above: ")
             cruise_id = (response.strip(),)
-            print('This function is not implemented yet...')
             #SQL="select dive. , from dive where dive.cruise_id= %s);"
             #cursor.execute(SQL, cruise_id)
 
 
 
-         elif choice == 13:
+         elif choice == 14:
             response = input("\nPlease enter an output directory with write permissions: ")
             output_dir = (response.strip(),)
             SQL="CREATE OR REPLACE FUNCTION db_to_csv(path TEXT) RETURNS void AS $$ declare tables RECORD;   statement TEXT; begin FOR tables IN SELECT (table_schema || '.' || table_name) AS schema_table FROM information_schema.tables t INNER JOIN information_schema.schemata s ON s.schema_name = t.table_schema WHERE t.table_schema NOT IN ('pg_catalog', 'information_schema') AND t.table_type NOT IN ('VIEW') ORDER BY schema_table LOOP statement := 'COPY ' || tables.schema_table || ' TO ''' || path || '/' || tables.schema_table || '.csv' ||''' DELIMITER '';'' CSV HEADER'; EXECUTE statement; END LOOP; return; end; $$ LANGUAGE plpgsql; SELECT db_to_csv(%s);"
