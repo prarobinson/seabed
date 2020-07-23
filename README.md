@@ -17,13 +17,22 @@ Copy all the code in seabed.sql into your terminal.
 Now you should have an empty DB to populate using the steps below.
 
 
-### Create seabed environment:
+### Install Anaconda:
 Install Anaconda 
+
 Linux: https://docs.anaconda.com/anaconda/install/linux/
+
 Mac: https://docs.anaconda.com/anaconda/install/mac-os/
+
 Windows: https://docs.anaconda.com/anaconda/install/windows/
 
-Run:
+
+Curt's doc for Mac:
+
+https://docs.google.com/document/d/1RLN141-h5eM0MVeWmS2QjfKAzpldNpSRSUe1_ag7P1E/edit
+
+
+### Create the seabed environment:
 >conda env create -f environment.yml
 
 >conda activate seabed 
