@@ -228,13 +228,13 @@ def main(conn, tablemap, filemap, debug):
             
             for filename in fctfiles:
                with open(os.path.join(root, filename), "r", encoding="latin-1") as fctfile:
+                  ### TODO: if there are no non-empty lines nothing is put in the DB;do we want to capture that thisempty fct file exists, so it can be queried later?
                   for line in fctfile:
                      line = line.strip()
                      
                      if len(line) == 0:
                         continue
                      
-                     ### TODO: do we need to be more careful about whitespace?
                      parts = line.split(",")
                      if len(parts) != 18:
                         continue
