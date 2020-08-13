@@ -1,3 +1,4 @@
+-- NOTE: This isn't used currently; The organism histogram query interrogates the Species_Table.csv directly, but we may wish to have this as a table instead
 CREATE TABLE species_list(
   ID SERIAL,
   ObjectID INTEGER,
@@ -29,8 +30,6 @@ CREATE TABLE species_list(
   PRIMARY KEY (ID)
 );
 
-COPY species_list(ObjectID,AphiaID,RACEcode,FRAMcode,SWFSCcode,Kingdom,Phylum,Subphylum,Class,Subclass,"Order",Family,Genus,Species,AUV_OTU,common_name,common_name_authority,AUV_nickname,morpho_type_descriptor,also_called_historically_3,Button_12RB,Group1,Group2,Activation_date,Deactivation_date,Notes)
-FROM '/home/paulr/WorkShtoof/NOAA/seabed/Species_Table.csv' 
-DELIMITER ',' 
-CSV HEADER;
+COPY  species_list(ObjectID,AphiaID,RACEcode,FRAMcode,SWFSCcode,Kingdom,Phylum,Subphylum,Class,Subclass,"Order",Family,Genus,Species,AUV_OTU,common_name,common_name_authority,AUV_nickname,morpho_type_descriptor,also_called_historically_3,Button_12RB,Group1,Group2,Activation_date,Deactivation_date,Notes)
+ FROM '/home/paulr/WorkShtoof/NOAA/seabed/Species_Table.csv' DELIMITER ',' CSV HEADER;
 

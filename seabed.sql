@@ -6,6 +6,7 @@ CREATE TABLE cruise (
 	cruise_id TEXT,
 	ship_name TEXT,
 	chief_sci TEXT,
+	notes TEXT,
 	UNIQUE(vehicle_name, cruise_id)
 );
 
@@ -26,7 +27,7 @@ CREATE TABLE dive (
 	utm_x TEXT,
 	utm_y TEXT,
 	mag_variation TEXT,
-	
+	notes TEXT,
 	UNIQUE(cruise_id, filename)
 );
 
@@ -219,6 +220,7 @@ CREATE TABLE optode (
 	temp DOUBLE PRECISION,
 	psat DOUBLE PRECISION,
 	conc DOUBLE PRECISION,
+	psat_cal DOUBLE PRECISION,
 	PRIMARY KEY(dive_id, rovtime)
 );
 
@@ -313,3 +315,5 @@ CREATE TABLE targets (
 	target_link INTEGER,
 	comment TEXT
 );
+
+
