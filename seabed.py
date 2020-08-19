@@ -172,9 +172,10 @@ def main(conn, tablemap, filemap, debug):
 
                if re.search('OCTANS', line):
                   insert_line(conn, cursor, diveid, line, 'octans', tablemap['octans']['cols'], tablemap['octans']['types'])
-
+   
+               ### NOTE!!: added "0" item to end of the line to accomodate missing calibrated psat
                if re.search('OPTODE', line):
-                  insert_line(conn, cursor, diveid, line, 'optode', tablemap['optode']['cols'], tablemap['optode']['types'])
+                  insert_line(conn, cursor, diveid, line + "0", 'optode', tablemap['optode']['cols'], tablemap['optode']['types'])
 
                if re.search('PAROSCI', line):
                   ### Need to copy msw into depth field
@@ -330,7 +331,7 @@ def insert_line(conn, cursor, diveid, line, table, cols, types):
       
       inserts.append(value)
 
-   ### MAKE SURE ALL EXPECTED DATA ARE PRESENT!! DATA LINE IS CURRENTLY OMITTED IF INCOMPLETE!
+   ### MAKE SURE ALL EXPECTED DATA ARE PRESENT!! DATA LINE IS CURRENTLY OMITTED IF INCOMPLETE!!! (E.G. OPTODE psat_cal)
    if len(inserts)-1 != len(cols):
       print('Data appear to be incomplete:', table, cols, inserts)
       return

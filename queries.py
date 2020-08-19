@@ -312,14 +312,12 @@ def main(dbname, user):
             opt_psats = [x[1] for x in OPTqreturn]
             opt_concs = [x[2] for x in OPTqreturn]
  
-            ### for each timestamp in the optode table, go through the ctd times and select the time just prior to the optode time
-            ### TODO: this method should be sufficient, but could it be better? Might be good to report the mean and sd of differencees between these timestamps
+            ### I think this is the best way to get nearest ctd time to optode time
             opt_depths = []
-            for idx, ot in enumerate(opt_times):
-               for jdx, ct in enumerate(ctd_times):
-                  if ct > ot:
-                     opt_depths.append(ctd_depths[jdx-1])
-                     break
+            for ot in opt_times:
+               time_diff = np.abs([date - ot for date in ctd_times])
+               min_idx = time_diff.argmin(0)
+               opt_depths.append(ctd_depths[min_idx])
 
 
             print("\nThis dive goes from ", min(ctd_depths),"m to ", max(ctd_depths), "m")
