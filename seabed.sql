@@ -220,7 +220,6 @@ CREATE TABLE optode (
 	temp DOUBLE PRECISION,
 	psat DOUBLE PRECISION,
 	conc DOUBLE PRECISION,
-	psat_cal DOUBLE PRECISION,
 	PRIMARY KEY(dive_id, rovtime)
 );
 

@@ -331,7 +331,7 @@ def insert_line(conn, cursor, diveid, line, table, cols, types):
       
       inserts.append(value)
 
-   ### MAKE SURE ALL EXPECTED DATA ARE PRESENT!! DATA LINE IS CURRENTLY OMITTED IF INCOMPLETE!!! (E.G. OPTODE psat_cal)
+   ### MAKE SURE ALL EXPECTED DATA ARE PRESENT!! DATA LINE IS CURRENTLY OMITTED IF INCOMPLETE!!!
    if len(inserts)-1 != len(cols):
       print('Data appear to be incomplete:', table, cols, inserts)
       return
@@ -491,7 +491,7 @@ def find_files(path):
       fctfiles = []
       ### Note, we're reverse sorting so we grab the newest file as sometimes
       ### there are multiple files for a single dive because of restarts.
-      ### Howevre, this also reverses the order in which CTL and RAW files are processed; do we care?
+      ### However, this also reverses the order in which CTL and RAW files are processed; do we care?
       for file in sorted(files, reverse=True):
          if (syscfgfile is None) and file.endswith(".FISHERIES.syscfg"):
             syscfgfile = file
@@ -535,12 +535,17 @@ if __name__ == "__main__":
    parser.add_argument("schema", help="SQL schema file for database creation (note that database isn't necessarily [re-]created)")
    parser.add_argument("path", help="File system path to collection of data files")
    parser.add_argument("-d", "--debug", dest="debug", action="store_true", help="Use debug mode which reduces data processing")
-   parser.add_argument("-n", "--dbname", dest="dbname", default="seabed", help="Name of database")
+   parser.add_argument("-n", "--dbname", dest="dbname", default="auv", help="Name of database")
+   parser.add_argument("-s", "--host", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="host name")
+   parser.add_argument("-p", "--port", dest="port", default="5455", help="port")
+   parser.add_argument("-w", "--pass", dest="password", default="", help="password")
    parser.add_argument("-u", "--user", dest="user", default="seabed", help="Name of database user")
    parser.add_argument("-r", "--recreate", dest="drop", metavar="SCHEMA", help="If this option is provided the database will first be dropped and recreated; note that the argument should be the SQL schema file to drop tables")
    parser.add_argument("-a", "--archive", dest="archive", metavar="PATH", help="If this option is provided the given data path will first be archived (copied) to the given archive path; note that destination path cannot exist")
+
+
    #### EXAMPLE:
-   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01 -u paulr -n seabed 
+   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01 -u paulr  
    #### EXAMPLE with re-create:
    ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01 -u paulr -n seabed -r drop.sql
    # parse argument and options responses 
