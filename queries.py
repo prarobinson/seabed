@@ -104,7 +104,32 @@ def main(dbname, user):
 
          elif choice == 3:
             ### TODO: generate python structure for 12RB
-            print("Not implemented yet")
+            print('''
+from collections import OrderedDict
+
+# Labels for categories of species - tab alternatives in the left panel
+ROCKFISH = 'Rockfish'
+FLATFISH = 'Flatfish'
+SKATES_SHARKS = 'Skates/Sharks'
+ROUNDFISH = 'Roundfish'
+INVERTEBRATES = 'Invertebrates'
+CORALS = 'Corals'
+SPONGES = 'Sponges'
+
+# Abbreviations to use on annotation
+fish_codes = {
+    ROCKFISH: 'RO',
+    FLATFISH: 'FL',
+    SKATES_SHARKS: 'SK',
+    ROUNDFISH: 'RN',
+    INVERTEBRATES: 'IN',
+    CORALS: 'CO',
+    SPONGES: 'SP'
+}
+
+            '''
+            )
+            
 
 
 
@@ -421,9 +446,9 @@ if __name__ == "__main__":
    parser.add_argument("-n", "--dbname", dest="dbname", default="auv", help="Name of database")
    parser.add_argument("-u", "--user", dest="user", default="seabed", help="user name")
    parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
-   parser.add_argument("-p", "--user", dest="port", default="5455", help="port at host")
-   parser.add_argument("-w", "--user", dest="password", default="", help="db password for this user")
+   parser.add_argument("-p", "--port", dest="port", default="5455", help="port at host")
+   parser.add_argument("-w", "--password", dest="password", default="", help="db password for this user")
 
-   ### Example: python queries.py -d seabed -u paulr -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]
+   ### Example: python queries.py -d auv -u paulr -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]
    args = parser.parse_args()
    sys.exit(main(args.dbname, args.user))

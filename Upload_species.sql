@@ -1,4 +1,4 @@
--- NOTE: This isn't used currently; The organism histogram query interrogates the Species_Table.csv directly, but we may wish to have this as a table instead
+-- NOTE: The organism histogram query interrogates the Species_Table.csv directly, but we may wish to have this as a table instead. This table IS used to create fish_types.py for 12RB
 CREATE TABLE species_list(
   ID SERIAL,
   ObjectID INTEGER,
