@@ -40,16 +40,20 @@ Now you should have an empty DB to populate using the steps below.
 
 
 ### Upload data (entire cruise or by dive):
-#### Local
-NOTE: -s (host), -w (password), and -p (port) aren't used in this case
+#### Locally
+NOTE: -s (server/host), -w (password), and -p (port) aren't used in this case
 
 >python seabed.py seabed.sql [/path/to/data] -n seabed -u [user] -s "" -w "" -p ""
 
 #### Remote server
--s (host) and -p (port) default to these values. You'll need to provide your pass word
+-s (serer/host) and -p (port) default to these values. You'll need to provide your pass word
 
 >python seabed.py seabed.sql [/path/to/data] -n auv -u [user] -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [password]
 
 
 ### Launch queries script:
->python queries.py -n [auv/seabed] -u paulr
+#### Locally
+>python queries.py -n seabed -u [user]
+
+#### Remote server
+>python queries.py -n auv -u [user] -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]

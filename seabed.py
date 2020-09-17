@@ -228,7 +228,9 @@ def main(conn, tablemap, filemap, debug):
             start = time.time()
             
             for filename in fctfiles:
-               mod_date = os.path.getmtime(filename)
+               this_file = os.path.join(root, filename)
+               mod_date_epoch = os.path.getmtime(this_file)
+               mod_date = time.ctime(mod_date_epoch)
                with open(os.path.join(root, filename), "r", encoding="latin-1") as fctfile:
                   ### TODO: if there are no non-empty lines nothing is put in the DB;do we want to capture that this empty fct file exists, so it can be queried later?
                   for line in fctfile:
@@ -537,7 +539,7 @@ if __name__ == "__main__":
    parser.add_argument("path", help="File system path to collection of data files")
    parser.add_argument("-d", "--debug", dest="debug", action="store_true", help="Use debug mode which reduces data processing")
    parser.add_argument("-n", "--dbname", dest="dbname", default="auv", help="Name of database")
-   parser.add_argument("-s", "--host", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="host name")
+   parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
    parser.add_argument("-p", "--port", dest="port", default="5455", help="port")
    parser.add_argument("-w", "--pass", dest="password", default="", help="password")
    parser.add_argument("-u", "--user", dest="user", default="seabed", help="Name of database user")
