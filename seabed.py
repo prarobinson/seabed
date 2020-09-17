@@ -175,7 +175,7 @@ def main(conn, tablemap, filemap, debug):
    
                ### NOTE!!: added "0" item to end of the line to accomodate missing calibrated psat
                if re.search('OPTODE', line):
-                  insert_line(conn, cursor, diveid, line + "0", 'optode', tablemap['optode']['cols'], tablemap['optode']['types'])
+                  insert_line(conn, cursor, diveid, line, 'optode', tablemap['optode']['cols'], tablemap['optode']['types'])
 
                if re.search('PAROSCI', line):
                   ### Need to copy msw into depth field
@@ -228,8 +228,9 @@ def main(conn, tablemap, filemap, debug):
             start = time.time()
             
             for filename in fctfiles:
+               mod_date = os.path.getmtime(filename)
                with open(os.path.join(root, filename), "r", encoding="latin-1") as fctfile:
-                  ### TODO: if there are no non-empty lines nothing is put in the DB;do we want to capture that thisempty fct file exists, so it can be queried later?
+                  ### TODO: if there are no non-empty lines nothing is put in the DB;do we want to capture that this empty fct file exists, so it can be queried later?
                   for line in fctfile:
                      line = line.strip()
                      
@@ -247,8 +248,8 @@ def main(conn, tablemap, filemap, debug):
                      
                      try:
                      ### getting a lot of these: "not all arguments converted during string formatting" after adding filename...
-                        SQL = 'INSERT INTO fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-                        cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), float(parts[2]), str(fctfile.name), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), parts[17]))
+                        SQL = 'INSERT INTO fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, mod_date, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                        cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), float(parts[2]), str(fctfile.name), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), mod_date, parts[17]))
                      except Exception as e:
                         print("\nProblem entering FCT file", filename, "because:", e,)
                         conn.rollback()
@@ -544,8 +545,8 @@ if __name__ == "__main__":
    parser.add_argument("-a", "--archive", dest="archive", metavar="PATH", help="If this option is provided the given data path will first be archived (copied) to the given archive path; note that destination path cannot exist")
 
 
-   #### EXAMPLE:
-   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01 -u paulr  
+   #### EXAMPLE (local):
+   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01/d20170711_2 -n seabed -u paulr -s "" -w "" -p "" -r drop.sql  
    #### EXAMPLE with re-create:
    ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01 -u paulr -n seabed -r drop.sql
    # parse argument and options responses 

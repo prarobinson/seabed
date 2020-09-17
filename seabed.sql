@@ -258,6 +258,7 @@ CREATE TABLE fct (
 	org_y DOUBLE PRECISION,
 	org_length DOUBLE PRECISION,
 	org_area DOUBLE PRECISION,
+        mod_date TIMESTAMP,
 	comment TEXT,
 	PRIMARY KEY(dive_id, time, org_x, org_y)
 );
