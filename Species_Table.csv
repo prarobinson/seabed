@@ -442,7 +442,7 @@ ObjectID,AphiaID,RACEcode,FRAMcode,SWFSCcode,Kingdom,Phylum,Subphylum,Class,Subc
 ,,,,,Animalia,,,Osteichthys,,,,Zaniolepis,,,,,,,,combfish UNID,,,,,
 ,,20000,,,Animalia,,,Osteichthys,,,Agonidae,,,,,,,,,poacher UNID,,,,,
 ,,22200,,,Animalia,,,Osteichthys,,,Liparidae,,,,,,,,,snailfish UNID,,,,,
-,,22220,,,Animalia,,,Osteichthys,,,Liparidae,Careproctus,melanurus,,,,,,,blacktail snailfish,,,,,
+,,22220,,,Animalia,,,Osteichthys,,,Liparidae,Careproctus,melafnurus,,,,,,,blacktail snailfish,,,,,
 ,,24100,,,Animalia,,,Osteichthys,,,Zoarcidae,,,,,,,,,eelpout UNID,,,,,
 ,,24140,,,Animalia,,,Osteichthys,,,Zoarcidae,Lycodes,cortezianus,,,,,,,bigfin eelpout,,,,,
 ,,24200,,,Animalia,,,Osteichthys,,,Zoarcidae,Lycodes,pacificus,,,,,,,blackbelly eelpout,,,,,

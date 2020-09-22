@@ -443,12 +443,12 @@ fish_codes = {
 
 if __name__ == "__main__":
    parser = ArgumentParser(description="Select queries to perform against SeaBED database.")
-   parser.add_argument("-n", "--dbname", dest="dbname", default="auv", help="Name of database")
+   parser.add_argument("-n", "--dbname", dest="dbname", default="seabed", help="Name of database")
    parser.add_argument("-u", "--user", dest="user", default="seabed", help="user name")
    parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
    parser.add_argument("-p", "--port", dest="port", default="5455", help="port at host")
    parser.add_argument("-w", "--password", dest="password", default="", help="db password for this user")
 
-   ### Example: python queries.py -d auv -u paulr -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]
+   ### Example: python queries.py -n auv -u paulr -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]
    args = parser.parse_args()
    sys.exit(main(args.dbname, args.user))

@@ -538,7 +538,7 @@ if __name__ == "__main__":
    parser.add_argument("schema", help="SQL schema file for database creation (note that database isn't necessarily [re-]created)")
    parser.add_argument("path", help="File system path to collection of data files")
    parser.add_argument("-d", "--debug", dest="debug", action="store_true", help="Use debug mode which reduces data processing")
-   parser.add_argument("-n", "--dbname", dest="dbname", default="auv", help="Name of database")
+   parser.add_argument("-n", "--dbname", dest="dbname", default="seabed", help="Name of database")
    parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
    parser.add_argument("-p", "--port", dest="port", default="5455", help="port")
    parser.add_argument("-w", "--pass", dest="password", default="", help="password")
