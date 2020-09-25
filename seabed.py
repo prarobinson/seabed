@@ -578,7 +578,7 @@ if __name__ == "__main__":
    code = 0
    
    # setup the connection and pass to main
-   conn = psycopg2.connect("dbname=%s user=%s server=%s port=%s" % (args.dbname, args.user, args.server, args.port))
+   conn = psycopg2.connect("dbname=%s user=%s server=%s port=%s password=secret" % (args.dbname, args.user, args.server, args.port))
    
    try:
       # if drop specified then recreate the database
