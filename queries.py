@@ -40,8 +40,8 @@ def hist(data, label):
 
 
 
-def main(dbname, user):
-   conn = psycopg2.connect("dbname=%s user=%s" % (dbname, user))
+def main(args):
+   conn = psycopg2.connect("dbname=%s user=%s server=%s port=%s password=secret" % (args.dbname, args.user, args.server, args.port))
    try:
       cursor = conn.cursor()
       
@@ -451,4 +451,4 @@ if __name__ == "__main__":
 
    ### Example: python queries.py -n auv -u paulr -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]
    args = parser.parse_args()
-   sys.exit(main(args.dbname, args.user))
+   sys.exit(main(args))
