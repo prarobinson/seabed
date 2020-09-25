@@ -13,7 +13,7 @@ CREATE TABLE seabed.cruise (
 
 CREATE TABLE seabed.dive (
 	id SERIAL NOT NULL PRIMARY KEY,
-	cruise_id INTEGER NOT NULL REFERENCES seabed.cruise,
+	cruise_id INTEGER NOT NULL REFERENCES seabed.cruise(id),
 	directory TEXT NOT NULL,
         filename TEXT NOT NULL,
 	filetime TIMESTAMP NOT NULL,
@@ -33,32 +33,32 @@ CREATE TABLE seabed.dive (
 
 -- used to have: 'period DOUBLE PRECISION,' (fromthe syscfg file?), but I think we should really compute this on the query side. My files show rovtime as the first field
 CREATE TABLE seabed.camera (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	image_directory TEXT,
 	PRIMARY KEY(dive_id, rovtime, image_directory)
 );
 
 CREATE TABLE seabed.deltaT (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	log_dir TEXT,
 	PRIMARY KEY(dive_id, log_dir)
 );
 
 CREATE TABLE seabed.blueview (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	log_dir TEXT,
 	PRIMARY KEY(dive_id, log_dir)
 );
 
 CREATE TABLE seabed.logger (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	log_dir TEXT,
 	PRIMARY KEY(dive_id, log_dir)
 );
 
 CREATE TABLE seabed.traj (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	depth DOUBLE PRECISION,
 	depth_vel DOUBLE PRECISION,
@@ -77,7 +77,7 @@ CREATE TABLE seabed.traj (
 
 -- there are intregity violations with this table
 CREATE TABLE seabed.est (
-	dive_id  INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id  INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	x_lbl DOUBLE PRECISION,
 	y_lbl DOUBLE PRECISION,
@@ -101,7 +101,7 @@ CREATE TABLE seabed.est (
 );
 
 CREATE TABLE seabed.goal (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	goal_id INTEGER NOT NULL,
 	goal_str TEXT,
@@ -118,7 +118,7 @@ CREATE TABLE seabed.goal (
 );
 
 CREATE TABLE seabed.thr (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	port DOUBLE PRECISION,
 	stbd DOUBLE PRECISION,
@@ -129,7 +129,7 @@ CREATE TABLE seabed.thr (
 
 -- there are intregity violations with this table
 CREATE TABLE seabed.pxf (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	imgname TEXT,
 	imgnum INTEGER,
@@ -137,7 +137,7 @@ CREATE TABLE seabed.pxf (
 );	
 	
 CREATE TABLE seabed.rdi (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	altitude DOUBLE PRECISION,
 	r1 DOUBLE PRECISION,
@@ -149,7 +149,7 @@ CREATE TABLE seabed.rdi (
 
 -- the depth field specifies which of saltwater or fresh is being used. Right now we just copy msw to depth.
 CREATE TABLE seabed.paro (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	msw DOUBLE PRECISION,
 	mfw DOUBLE PRECISION,
@@ -158,7 +158,7 @@ CREATE TABLE seabed.paro (
 );
 
 CREATE TABLE seabed.battery (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	avg_charge REAL,
 	total_current REAL,
@@ -174,7 +174,7 @@ CREATE TABLE seabed.battery (
 -- the original model of the data (and a thr table already exists)
 
 CREATE TABLE seabed.thr_vert (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	speed DOUBLE PRECISION,
 	current DOUBLE PRECISION,
@@ -184,7 +184,7 @@ CREATE TABLE seabed.thr_vert (
 );
 
 CREATE TABLE seabed.thr_port (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	speed DOUBLE PRECISION,
 	current DOUBLE PRECISION,
@@ -194,7 +194,7 @@ CREATE TABLE seabed.thr_port (
 );
 
 CREATE TABLE seabed.thr_stbd (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	speed DOUBLE PRECISION,
 	current DOUBLE PRECISION,
@@ -204,7 +204,7 @@ CREATE TABLE seabed.thr_stbd (
 );
 
 CREATE TABLE seabed.ctd (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	cond DOUBLE PRECISION,
 	temp DOUBLE PRECISION,
@@ -215,7 +215,7 @@ CREATE TABLE seabed.ctd (
 );
 
 CREATE TABLE seabed.optode (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	temp DOUBLE PRECISION,
 	psat DOUBLE PRECISION,
@@ -224,7 +224,7 @@ CREATE TABLE seabed.optode (
 );
 
 CREATE TABLE octans (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	heading DOUBLE PRECISION,
 	pitch DOUBLE PRECISION,
@@ -240,7 +240,7 @@ CREATE TABLE octans (
 );
 
 CREATE TABLE seabed.fct (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive, 
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id), 
 	latitude DOUBLE PRECISION,
 	longitude DOUBLE PRECISION,
 	depth DOUBLE PRECISION,
@@ -264,7 +264,7 @@ CREATE TABLE seabed.fct (
 );
 
 CREATE TABLE seabed.frames (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	deployment_ID TEXT,
 	frame_number INTEGER,
 	frame_time TEXT,
@@ -286,7 +286,7 @@ CREATE TABLE seabed.frames (
 );
 
 CREATE TABLE seabed.targets (
-	dive_id INTEGER NOT NULL REFERENCES seabed.dive,
+	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	deployment_ID TEXT,
 	frame_number INTEGER,
 	target_number NUMERIC,

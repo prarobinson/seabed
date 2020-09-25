@@ -61,10 +61,10 @@ def main(conn, tablemap, filemap, debug):
          syscfg = metadata.pop("syscfg")[0]
       
          ### first get the id of the cruise or create a new entry
-         cursor.execute("SELECT id FROM cruise WHERE vehicle_name = %s AND cruise_id = %s", (syscfg["vehicle_name"], syscfg["cruise_id"]))
+         cursor.execute("SELECT id FROM seabed.cruise WHERE vehicle_name = %s AND cruise_id = %s", (syscfg["vehicle_name"], syscfg["cruise_id"]))
          if cursor.rowcount < 1:
             cursor.execute(
-               "INSERT INTO cruise (vehicle_name, vehicle_cfg, cruise_name, cruise_id, ship_name, chief_sci) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id", 
+               "INSERT INTO seabed.cruise (vehicle_name, vehicle_cfg, cruise_name, cruise_id, ship_name, chief_sci) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id", 
                (
                   syscfg["vehicle_name"], syscfg["vehicle_cfg"], syscfg["cruise_name"], 
                   syscfg["cruise_id"], syscfg["ship_name"], syscfg["chief_sci"]
@@ -104,7 +104,7 @@ def main(conn, tablemap, filemap, debug):
          ### insert the metadata and get the dive id
          try:
             cursor.execute(
-               "INSERT INTO dive (cruise_id, directory, filename, filetime, starttime, endtime, ready, location, origin_lat, origin_lon, utm_zone, utm_x, utm_y, mag_variation) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id", 
+               "INSERT INTO seabed.dive (cruise_id, directory, filename, filetime, starttime, endtime, ready, location, origin_lat, origin_lon, utm_zone, utm_x, utm_y, mag_variation) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id", 
                (
                   cruiseid, directory, syscfgfile, filetime, starttime, endtime, False, syscfg.get("location"), 
                   syscfg.get("origin_lat"), syscfg.get("origin_lon"), syscfg.get("utm_zone"), syscfg.get("utm_x"), 
@@ -140,11 +140,11 @@ def main(conn, tablemap, filemap, debug):
             print("Processing CTL: %s ..." % ctlpath)
             for line in f:
                if re.search('EST', line):
-                  insert_line(conn, cursor, diveid, line, 'est', tablemap['est']['cols'], tablemap['est']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.est', tablemap['est']['cols'], tablemap['est']['types'])
                if re.search('REF', line):
-                  insert_line(conn, cursor, diveid, line, 'traj', tablemap['traj']['cols'], tablemap['traj']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.traj', tablemap['traj']['cols'], tablemap['traj']['types'])
                if re.search('THR', line):
-                  insert_line(conn, cursor, diveid, line, 'thr', tablemap['thr']['cols'], tablemap['thr']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr', tablemap['thr']['cols'], tablemap['thr']['types'])
 
             secs = time.time() - start
             print("(%.1fs)" % secs)
@@ -165,17 +165,17 @@ def main(conn, tablemap, filemap, debug):
                      line_trunx.append(re.sub(i, i + "X", i))
                 
                   line = re.sub('X', ' ', "".join(line_trunx))
-                  insert_line(conn, cursor, diveid, line, 'battery', tablemap['battery']['cols'], tablemap['battery']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.battery', tablemap['battery']['cols'], tablemap['battery']['types'])
 
                if re.search('CAMERA', line):
-                  insert_line(conn, cursor, diveid, line, 'camera', tablemap['camera']['cols'], tablemap['camera']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.camera', tablemap['camera']['cols'], tablemap['camera']['types'])
 
                if re.search('OCTANS', line):
-                  insert_line(conn, cursor, diveid, line, 'octans', tablemap['octans']['cols'], tablemap['octans']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.octans', tablemap['octans']['cols'], tablemap['octans']['types'])
    
                ### NOTE!!: added "0" item to end of the line to accomodate missing calibrated psat
                if re.search('OPTODE', line):
-                  insert_line(conn, cursor, diveid, line, 'optode', tablemap['optode']['cols'], tablemap['optode']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.optode', tablemap['optode']['cols'], tablemap['optode']['types'])
 
                if re.search('PAROSCI', line):
                   ### Need to copy msw into depth field
@@ -186,7 +186,7 @@ def main(conn, tablemap, filemap, debug):
                      line_splix.append(re.sub(i, i + "X", i))
                 
                   line = re.sub('X', ' ', "".join(line_splix))
-                  insert_line(conn, cursor, diveid, line, 'paro', tablemap['paro']['cols'], tablemap['paro']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.paro', tablemap['paro']['cols'], tablemap['paro']['types'])
 
                if re.search('RDI', line):
                   ### just get the first 6 values.
@@ -196,19 +196,19 @@ def main(conn, tablemap, filemap, debug):
                      line_trunx.append(re.sub(i, i + "X", i))
                 
                   line = re.sub('X', ' ', "".join(line_trunx))
-                  insert_line(conn, cursor, diveid, line, 'rdi', tablemap['rdi']['cols'], tablemap['rdi']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.rdi', tablemap['rdi']['cols'], tablemap['rdi']['types'])
 
                if re.search('THR_PORT', line):
-                  insert_line(conn, cursor, diveid, line, 'thr_port', tablemap['thr_port']['cols'], tablemap['thr_port']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr_port', tablemap['thr_port']['cols'], tablemap['thr_port']['types'])
 
                if re.search('THR_STBD', line):
-                  insert_line(conn, cursor, diveid, line, 'thr_stbd', tablemap['thr_stbd']['cols'], tablemap['thr_stbd']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr_stbd', tablemap['thr_stbd']['cols'], tablemap['thr_stbd']['types'])
 
                if re.search('THR_VERT', line):
-                  insert_line(conn, cursor, diveid, line, 'thr_vert', tablemap['thr_vert']['cols'], tablemap['thr_vert']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr_vert', tablemap['thr_vert']['cols'], tablemap['thr_vert']['types'])
 
                if re.search('SEABIRD', line):
-                  insert_line(conn, cursor, diveid, line, 'ctd', tablemap['ctd']['cols'], tablemap['ctd']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.ctd', tablemap['ctd']['cols'], tablemap['ctd']['types'])
 
             secs = time.time() - start
             print("(%.1fs)" % secs)
@@ -216,7 +216,7 @@ def main(conn, tablemap, filemap, debug):
 
          
          ### update our dive table now that the data have been inserted
-         cursor.execute("UPDATE dive SET ready = %s WHERE id = %s", (True, diveid))
+         cursor.execute("UPDATE seabed.dive SET ready = %s WHERE id = %s", (True, diveid))
          conn.commit()
 
 
@@ -250,7 +250,7 @@ def main(conn, tablemap, filemap, debug):
                      
                      try:
                      ### getting a lot of these: "not all arguments converted during string formatting" after adding filename...
-                        SQL = 'INSERT INTO fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, mod_date, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                        SQL = 'INSERT INTO seabed.fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, mod_date, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                         cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), float(parts[2]), str(fctfile.name), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), mod_date, parts[17]))
                      except Exception as e:
                         print("\nProblem entering FCT file", filename, "because:", e,)
@@ -360,21 +360,21 @@ def insert_sebas(cursor, diveid, sqlfile, tablemap):
    with sqlite3.connect(sqlfile) as conn:
       c = conn.cursor()
       ### build a list of frame and target rows and prepend the dive id
-      for row in c.execute("SELECT * FROM frames"):
+      for row in c.execute("SELECT * FROM seabed.frames"):
          frames.append((diveid,) + row)
       
-      for row in c.execute("SELECT * FROM targets"):
+      for row in c.execute("SELECT * FROM seabed.targets"):
          targets.append((diveid,) + row)
          
    ### then, if we have data, put it into the master database (assuming the table schemas match) 
    if len(frames) > 0:
       ### note we need to add one to the length because the foreign key is omitted in the dict
-      cursor.executemany("INSERT INTO frames VALUES (%s)" % ",".join(["%s"] * ( len(tablemap["frames"]["cols"]) + 1 )), frames)
+      cursor.executemany("INSERT INTO seabed.frames VALUES (%s)" % ",".join(["%s"] * ( len(tablemap["frames"]["cols"]) + 1 )), frames)
       conn.commit()
       
    if len(targets) > 0:
       ### note we need to add one to the length because the foreign key is omitted in the dict
-      cursor.executemany("INSERT INTO targets VALUES (%s)" % ",".join(["%s"] * ( len(tablemap["targets"]["cols"]) + 1 )), targets)
+      cursor.executemany("INSERT INTO seabed.targets VALUES (%s)" % ",".join(["%s"] * ( len(tablemap["targets"]["cols"]) + 1 )), targets)
       conn.commit()
 
 
@@ -578,7 +578,7 @@ if __name__ == "__main__":
    code = 0
    
    # setup the connection and pass to main
-   conn = psycopg2.connect("dbname=%s user=%s" % (args.dbname, args.user))
+   conn = psycopg2.connect("dbname=%s user=%s server=%s port=%s" % (args.dbname, args.user, args.server, args.port))
    
    try:
       # if drop specified then recreate the database
