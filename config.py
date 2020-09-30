@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+from configparser import ConfigParser
+
+### NOTE!!! YOU WILL NEED TO CHANGE database.ini TO database_local.ini IN ORDER TO USE THE LOCALHOST
+def config(filename='database_local.ini', section='postgresql'):
+    # create a parser
+    print("Using ",filename, ". Please edit config.py to point at database_local.ini to use a local database, or database.ini for a remote server.")
+    parser = ConfigParser()
+    # read config file
+    parser.read(filename)
+
+    # get section, default to postgresql
+    db = {}
+    if parser.has_section(section):
+        params = parser.items(section)
+        for param in params:
+            db[param[0]] = param[1]
+    else:
+        raise Exception('Section {0} not found in the {1} file'.format(section, filename))
+
+    return db
