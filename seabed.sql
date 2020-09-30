@@ -223,7 +223,7 @@ CREATE TABLE seabed.optode (
 	PRIMARY KEY(dive_id, rovtime)
 );
 
-CREATE TABLE octans (
+CREATE TABLE seabed.octans (
 	dive_id INTEGER NOT NULL REFERENCES seabed.dive(id),
 	rovtime TIMESTAMP NOT NULL,
 	heading DOUBLE PRECISION,
