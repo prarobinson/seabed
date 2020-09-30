@@ -33,27 +33,22 @@ log in (>psql)
 
 >\c seabed;
 
+>\CREATE SCHEMA seabed;
+
 Copy all the code in seabed.sql into your terminal.
 
-Now you should have an empty DB to populate using the steps below.
+If there were no errors, you should have an empty DB to populate using the steps below.
 
 
 
 ### Upload data (entire cruise or by dive):
-#### Locally
-NOTE: -s (server/host), -w (password), and -p (port) aren't used in this case
+Connecting to the database is now handled using a .ini file, which simplifies the command line call considerably.
 
->python seabed.py seabed.sql [/path/to/data] -n seabed -u [user] -s "" -w "" -p ""
+Make sure you're using the correct .ini file: databse.ini should point to the remote server, while database_local.ini is for your localhost. You will need to edit these files to contain your password!
 
-#### Remote server
--s (serer/host) and -p (port) default to these values. You'll need to provide your pass word
-
->python seabed.py seabed.sql [/path/to/data] -n auv -u [user] -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [password]
+>python seabed.py seabed.sql [/path/to/data] 
 
 
 ### Launch queries script:
-#### Locally
->python queries.py -n seabed -u [user]
+>python queries.py
 
-#### Remote server
->python queries.py -n auv -u [user] -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]

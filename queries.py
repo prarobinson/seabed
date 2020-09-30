@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import psycopg2
 #from worms_suds import *
@@ -8,6 +10,8 @@ import statistics as stat
 import numpy as np
 from datetime import datetime, timedelta
 from collections import OrderedDict
+
+from config import config
 
 def get_taxa(annot):
    with open('Species_Table.csv') as csv_file:
@@ -40,9 +44,16 @@ def hist(data, label):
 
 
 
-def main(args):
-   conn = psycopg2.connect("dbname=%s user=%s server=%s port=%s password=secret" % (args.dbname, args.user, args.server, args.port))
+def main():
+   #conn = psycopg2.connect("dbname=%s user=%s server=%s port=%s password=%s" % (args.dbname, args.user, args.server,  args.port,args.password))
+   conn = None
+
    try:
+      params = config()
+
+      print('Connecting to the PostgreSQL database...')
+      conn = psycopg2.connect(**params)
+		     
       cursor = conn.cursor()
       
       prompt = "Select from the following options (or q to quit):\n\n"
@@ -81,8 +92,8 @@ def main(args):
 
          
          if choice == 1:
-            cols = ["cruise_id", "cruise_name", "ship_name"]
-            cursor.execute("SELECT %s FROM cruise ORDER BY cruise_id" % ",".join(cols))
+            cols = ["seabed.cruise.cruise_id", "seabed.cruise.cruise_name", "seabed.cruise.ship_name"]
+            cursor.execute("SELECT %s FROM seabed.cruise ORDER BY seabed.cruise.cruise_id" % ",".join(cols))
             
             for row in cursor:
                results = []
@@ -92,8 +103,8 @@ def main(args):
 
   
          elif choice == 2:
-            cols = ["cruise.cruise_id", "directory", "location", "starttime", "endtime", "origin_lat", "origin_lon"]
-            cursor.execute("SELECT %s FROM cruise, dive WHERE dive.cruise_id = cruise.id ORDER BY starttime" % ",".join(cols))
+            cols = ["seabed.cruise.cruise_id", "seabed.dive.directory", "seabed.dive.location", "seabed.dive.starttime", "seabed.dive.endtime", "seabed.dive.origin_lat", "seabed.dive.origin_lon"]
+            cursor.execute("SELECT %s FROM seabed.cruise, seabed.dive WHERE seabed.dive.cruise_id = seabed.cruise.id ORDER BY seabed.dive.starttime" % ",".join(cols))
             
             for row in cursor:
                results = []
@@ -134,7 +145,7 @@ fish_codes = {
 
 
          elif choice == 4:
-            cursor.execute("SELECT DISTINCT org_type FROM fct WHERE org_type <> '' ORDER BY org_type")
+            cursor.execute("SELECT DISTINCT org_type FROM seabed.fct WHERE org_type <> '' ORDER BY org_type")
             results = []
             for row in cursor:
                results.append(row[0])
@@ -143,13 +154,14 @@ fish_codes = {
 
 
          elif choice == 5:
-            cursor.execute("SELECT DISTINCT org_subtype FROM fct WHERE org_subtype <> '' ORDER BY org_subtype")
+            cursor.execute("SELECT DISTINCT org_subtype FROM seabed.fct WHERE org_subtype <> '' ORDER BY org_subtype")
             results = []
             for row in cursor:
                results.append(row[0])
             print(", ".join(results))
 
 
+         ### TODO: edit this to accommodate seabed. prefix
          elif choice == 6:
             response = input("\nPlease enter an output directory with write permissions: ")
             output_dir = (response.strip(),)
@@ -161,7 +173,7 @@ fish_codes = {
          elif choice == 7:
             print('This function is not implemented yet...')
             continue
-            SQL="select cruise.id, cruise.cruise_name from cruise;"
+            SQL="select cruise.id, cruise.cruise_name from seabed.cruise;"
             cursor.execute(SQL)
             #cursor.fetchall()
             for row in cursor:
@@ -176,7 +188,7 @@ fish_codes = {
          elif choice == 8:
             response = input("\nEnter the dive directory (e.g., d20150917_1): ")
             dive = (response.strip(),)
-            SQL='SELECT DISTINCT fct.org_subtype as Subtype FROM fct WHERE fct.dive_id=(select id from dive where directory = %s) order by Subtype;'
+            SQL='SELECT DISTINCT fct.org_subtype as Subtype FROM seabed.fct WHERE fct.dive_id=(select id from dive where directory = %s) order by Subtype;'
             cursor.execute(SQL, dive)
             results = []
             for row in cursor:
@@ -442,13 +454,13 @@ fish_codes = {
    
 
 if __name__ == "__main__":
-   parser = ArgumentParser(description="Select queries to perform against SeaBED database.")
-   parser.add_argument("-n", "--dbname", dest="dbname", default="seabed", help="Name of database")
-   parser.add_argument("-u", "--user", dest="user", default="seabed", help="user name")
-   parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
-   parser.add_argument("-p", "--port", dest="port", default="5455", help="port at host")
-   parser.add_argument("-w", "--password", dest="password", default="", help="db password for this user")
+   #parser = ArgumentParser(description="Select queries to perform against SeaBED database.")
+   #parser.add_argument("-n", "--dbname", dest="dbname", default="seabed", help="Name of database")
+   #parser.add_argument("-u", "--user", dest="user", default="seabed", help="user name")
+   #parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
+   #parser.add_argument("-p", "--port", dest="port", default="5455", help="port at host")
+   #parser.add_argument("-w", "--password", dest="password", default="", help="db password for this user")
 
-   ### Example: python queries.py -n auv -u paulr -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]
-   args = parser.parse_args()
-   sys.exit(main(args))
+   ### Example: python queries.py -n seabed -u paulr -s nwcdbp24.nwfsc.noaa.gov -p 5455 -w [your password]
+   #args = parser.parse_args()
+   sys.exit(main())

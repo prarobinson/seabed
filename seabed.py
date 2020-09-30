@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import re
 import sys
@@ -13,6 +15,10 @@ import scipy.io
 
 from datetime import datetime
 from argparse import ArgumentParser
+
+from config import config
+
+
 
 ### TODO: do we need to do this anymore?
 # TODO: do we need to use the parsed schema to insert the sysconfig data?
@@ -140,11 +146,11 @@ def main(conn, tablemap, filemap, debug):
             print("Processing CTL: %s ..." % ctlpath)
             for line in f:
                if re.search('EST', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.est', tablemap['est']['cols'], tablemap['est']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.est', tablemap['seabed.est']['cols'], tablemap['seabed.est']['types'])
                if re.search('REF', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.traj', tablemap['traj']['cols'], tablemap['traj']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.traj', tablemap['seabed.traj']['cols'], tablemap['seabed.traj']['types'])
                if re.search('THR', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.thr', tablemap['thr']['cols'], tablemap['thr']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr', tablemap['seabed.thr']['cols'], tablemap['seabed.thr']['types'])
 
             secs = time.time() - start
             print("(%.1fs)" % secs)
@@ -165,17 +171,17 @@ def main(conn, tablemap, filemap, debug):
                      line_trunx.append(re.sub(i, i + "X", i))
                 
                   line = re.sub('X', ' ', "".join(line_trunx))
-                  insert_line(conn, cursor, diveid, line, 'seabed.battery', tablemap['battery']['cols'], tablemap['battery']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.battery', tablemap['seabed.battery']['cols'], tablemap['seabed.battery']['types'])
 
                if re.search('CAMERA', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.camera', tablemap['camera']['cols'], tablemap['camera']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.camera', tablemap['seabed.camera']['cols'], tablemap['seabed.camera']['types'])
 
                if re.search('OCTANS', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.octans', tablemap['octans']['cols'], tablemap['octans']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.octans', tablemap['seabed.octans']['cols'], tablemap['seabed.octans']['types'])
    
                ### NOTE!!: added "0" item to end of the line to accomodate missing calibrated psat
                if re.search('OPTODE', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.optode', tablemap['optode']['cols'], tablemap['optode']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.optode', tablemap['seabed.optode']['cols'], tablemap['seabed.optode']['types'])
 
                if re.search('PAROSCI', line):
                   ### Need to copy msw into depth field
@@ -186,7 +192,7 @@ def main(conn, tablemap, filemap, debug):
                      line_splix.append(re.sub(i, i + "X", i))
                 
                   line = re.sub('X', ' ', "".join(line_splix))
-                  insert_line(conn, cursor, diveid, line, 'seabed.paro', tablemap['paro']['cols'], tablemap['paro']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.paro', tablemap['seabed.paro']['cols'], tablemap['seabed.paro']['types'])
 
                if re.search('RDI', line):
                   ### just get the first 6 values.
@@ -196,19 +202,19 @@ def main(conn, tablemap, filemap, debug):
                      line_trunx.append(re.sub(i, i + "X", i))
                 
                   line = re.sub('X', ' ', "".join(line_trunx))
-                  insert_line(conn, cursor, diveid, line, 'seabed.rdi', tablemap['rdi']['cols'], tablemap['rdi']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.rdi', tablemap['seabed.rdi']['cols'], tablemap['seabed.rdi']['types'])
 
                if re.search('THR_PORT', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.thr_port', tablemap['thr_port']['cols'], tablemap['thr_port']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr_port', tablemap['seabed.thr_port']['cols'], tablemap['seabed.thr_port']['types'])
 
                if re.search('THR_STBD', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.thr_stbd', tablemap['thr_stbd']['cols'], tablemap['thr_stbd']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr_stbd', tablemap['seabed.thr_stbd']['cols'], tablemap['seabed.thr_stbd']['types'])
 
                if re.search('THR_VERT', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.thr_vert', tablemap['thr_vert']['cols'], tablemap['thr_vert']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.thr_vert', tablemap['seabed.thr_vert']['cols'], tablemap['seabed.thr_vert']['types'])
 
                if re.search('SEABIRD', line):
-                  insert_line(conn, cursor, diveid, line, 'seabed.ctd', tablemap['ctd']['cols'], tablemap['ctd']['types'])
+                  insert_line(conn, cursor, diveid, line, 'seabed.ctd', tablemap['seabed.ctd']['cols'], tablemap['seabed.ctd']['types'])
 
             secs = time.time() - start
             print("(%.1fs)" % secs)
@@ -538,22 +544,22 @@ if __name__ == "__main__":
    parser.add_argument("schema", help="SQL schema file for database creation (note that database isn't necessarily [re-]created)")
    parser.add_argument("path", help="File system path to collection of data files")
    parser.add_argument("-d", "--debug", dest="debug", action="store_true", help="Use debug mode which reduces data processing")
-   parser.add_argument("-n", "--dbname", dest="dbname", default="seabed", help="Name of database")
-   parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
-   parser.add_argument("-p", "--port", dest="port", default="5455", help="port")
-   parser.add_argument("-w", "--pass", dest="password", default="", help="password")
-   parser.add_argument("-u", "--user", dest="user", default="seabed", help="Name of database user")
+   #parser.add_argument("-n", "--dbname", dest="dbname", default="seabed", help="Name of database")
+   #parser.add_argument("-s", "--server", dest="host", default="nwcdbp24.nwfsc.noaa.gov", help="server name")
+   #parser.add_argument("-p", "--port", dest="port", default="5455", help="port")
+   #parser.add_argument("-w", "--pass", dest="password", default="", help="password")
+   #parser.add_argument("-u", "--user", dest="user", default="seabed", help="Name of database user")
    parser.add_argument("-r", "--recreate", dest="drop", metavar="SCHEMA", help="If this option is provided the database will first be dropped and recreated; note that the argument should be the SQL schema file to drop tables")
    parser.add_argument("-a", "--archive", dest="archive", metavar="PATH", help="If this option is provided the given data path will first be archived (copied) to the given archive path; note that destination path cannot exist")
 
 
    #### EXAMPLE (local):
-   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01/d20170711_2 -n seabed -u paulr -s "" -w "" -p "" -r drop.sql  
+   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01/d20170711_2 -r drop.sql  
    #### EXAMPLE with re-create:
-   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01 -u paulr -n seabed -r drop.sql
+   ####    python seabed.py seabed.sql /home/paulr/WorkShtoof/NOAA/FUL_17_01 -r drop.sql
    # parse argument and options responses 
    args = parser.parse_args()
-   print(args)
+   #print(args)
    ### This is the path to the data; see EXAMPLE above 
    path = args.path
    
@@ -578,7 +584,11 @@ if __name__ == "__main__":
    code = 0
    
    # setup the connection and pass to main
-   conn = psycopg2.connect("dbname=%s user=%s server=%s port=%s password=secret" % (args.dbname, args.user, args.server, args.port))
+   conn = None
+   params = config()
+
+   print('Connecting to the PostgreSQL database...')
+   conn = psycopg2.connect(**params)
    
    try:
       # if drop specified then recreate the database
