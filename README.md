@@ -29,9 +29,9 @@ Have PostgreSQL installed (this may be platform-dependent)
 
 log in (>psql)
 
->CREATE DATABASE seabed;
+>CREATE DATABASE auv;
 
->\c seabed;
+>\c auv;
 
 >\CREATE SCHEMA seabed;
 
