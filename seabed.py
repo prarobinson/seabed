@@ -549,7 +549,7 @@ if __name__ == "__main__":
    #parser.add_argument("-p", "--port", dest="port", default="5455", help="port")
    #parser.add_argument("-w", "--pass", dest="password", default="", help="password")
    #parser.add_argument("-u", "--user", dest="user", default="seabed", help="Name of database user")
-   parser.add_argument("-r", "--recreate", dest="drop", metavar="SCHEMA", help="If this option is provided the database will first be dropped and recreated; note that the argument should be the SQL schema file to drop tables")
+   parser.add_argument("-r", "--recreate", dest="drop", metavar="SCHEMA", help="If this option is provided the table will first be emptied and re-populated for the given dive; note that the argument should be the SQL schema file 'drop.sql'")
    parser.add_argument("-a", "--archive", dest="archive", metavar="PATH", help="If this option is provided the given data path will first be archived (copied) to the given archive path; note that destination path cannot exist")
 
 
@@ -591,11 +591,18 @@ if __name__ == "__main__":
    conn = psycopg2.connect(**params)
    
    try:
-      # if drop specified then recreate the database
+      # if drop specified then delete from the database ONLY AT THE DIVE LEVEL (easy enough to iterate over dives in BASH)
       if args.drop:
+         print("Emptying tables for dive ", os.path.basename(path))
          cursor = conn.cursor()
-         cursor.execute(open(args.drop, "r").read())
-         cursor.execute(open(args.schema, "r").read())
+         ### the dive folder needs to be repeated for every replacement in the SQL statement -- including comments!
+         dive_tuple = (os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),os.path.basename(path),)
+         ### get code from drop.sql
+         drop_code = open('drop.sql', 'r').read().splitlines()
+         ### join it back up into astringsinceit was list-ified with split_lines to omit \n     
+         SQL = ''.join(str(elem) for elem in drop_code)
+         cursor.execute(SQL, dive_tuple)
+         #cursor.execute(open(args.drop, "r").read())
          conn.commit()
          cursor.close()
          

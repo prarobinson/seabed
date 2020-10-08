@@ -48,6 +48,8 @@ Make sure you're using the correct .ini file: databse.ini should point to the re
 
 >python seabed.py seabed.sql [/path/to/data] 
 
+If an upload fails in the middle or you'd like to re-upload for any reason, simply add '-r drop.sql' to your call to empty all tables of data associated with this dive. Note: there is no DROP per se happening here, just DELETEs.
+
 
 ### Launch queries script:
 >python queries.py
