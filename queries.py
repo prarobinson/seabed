@@ -10,9 +10,12 @@ import statistics as stat
 import numpy as np
 from datetime import datetime, timedelta
 from collections import OrderedDict
-
 from config import config
+import math
 
+
+
+### TODO: change this so it pulls from the DB table instead of this .csv file 
 def get_taxa(annot):
    with open('Species_Table.csv') as csv_file:
       csv_reader = csv.reader(csv_file, delimiter=',')
@@ -25,6 +28,23 @@ def get_taxa(annot):
             taxa = ["not listed on Species lookup table", annot]
  
    return taxa
+
+
+
+def cal_O2(O2_conc, temp, sal, pres):
+   ### NOTE! Salinity setting is assumed to be 0!!! 
+   sal_set = 0.0
+   pres_comp = 0.032
+   B0 = -0.00624097 
+   B1 = -0.00693498
+   B2 = -0.00690358
+   B3 = -0.00429155
+   C0 = -0.000000311680
+   scaled_temp = np.log((298.15 - temp)/(273.15 + temp))
+   sal_comp = math.exp((sal - sal_set)*(B0 + B1*scaled_temp + B2*scaled_temp**2 + B3*scaled_temp**3) + C0*(sal**2 - sal_set**2))
+   pres_comp_factor = (((np.abs(pres))/1000) * pres_comp) + 1
+   O2_adj = O2_conc * sal_comp * pres_comp_factor
+   return O2_adj
 
 
 def hist(data, label):
@@ -73,8 +93,9 @@ def main():
       prompt += "\t11) Images with with more than N organism(s) identified\n"
       prompt += "\t12) Produce organism histograms by dive\n"
       prompt += "\t13) Dive area surveyed by substrate\n"
-      prompt += "\t14) Plot CTD data\n"
-      prompt += "\t15) Export merged fct and ctd to .csv\n"
+      prompt += "\t14) Plot CTD+Optode data\n"
+      prompt += "\t15) Export merged fct and CTD+Optode to .csv\n"
+      prompt += "\t16) Export all dive data to .csv\n"
       prompt += "--> "
       
       while True:
@@ -90,7 +111,7 @@ def main():
          except:
             pass
 
-         
+         ### SHOW CRUISE INFO
          if choice == 1:
             cols = ["seabed.cruise.cruise_id", "seabed.cruise.cruise_name", "seabed.cruise.ship_name"]
             cursor.execute("SELECT %s FROM seabed.cruise ORDER BY seabed.cruise.cruise_id" % ",".join(cols))
@@ -101,7 +122,8 @@ def main():
                   results.append("%s: %s" % (col, row[i]))
                print(", ".join(results))
 
-  
+
+         ### SHOW ALL DIVES
          elif choice == 2:
             cols = ["seabed.cruise.cruise_id", "seabed.dive.directory", "seabed.dive.location", "seabed.dive.starttime", "seabed.dive.endtime", "seabed.dive.origin_lat", "seabed.dive.origin_lon"]
             cursor.execute("SELECT %s FROM seabed.cruise, seabed.dive WHERE seabed.dive.cruise_id = seabed.cruise.id ORDER BY seabed.dive.starttime" % ",".join(cols))
@@ -112,7 +134,8 @@ def main():
                   results.append("%s: %s" % (col, row[i]))
                print(", ".join(results))
          
-
+ 
+         ### SHOW PRIMARY SPECIES STRUCTURE (fish_types.py)
          elif choice == 3:
             ### TODO: generate python structure for 12RB
             print('''
@@ -143,7 +166,7 @@ fish_codes = {
             
 
 
-
+         ### SHOW ALL ORGANISM TYPES
          elif choice == 4:
             cursor.execute("SELECT DISTINCT org_type FROM seabed.fct WHERE org_type <> '' ORDER BY org_type")
             results = []
@@ -152,7 +175,7 @@ fish_codes = {
             print(", ".join(results))
             
 
-
+         ### SHOW ALL ORGANISM SUBTYPES
          elif choice == 5:
             cursor.execute("SELECT DISTINCT org_subtype FROM seabed.fct WHERE org_subtype <> '' ORDER BY org_subtype")
             results = []
@@ -161,6 +184,7 @@ fish_codes = {
             print(", ".join(results))
 
 
+         ### DUMP DATABASE TO .CSV FILES
          ### TODO: edit this to accommodate seabed. prefix
          elif choice == 6:
             response = input("\nPlease enter an output directory with write permissions: ")
@@ -169,7 +193,7 @@ fish_codes = {
             cursor.execute(SQL, output_dir)
 
 
-
+         ### LOGISTICAL AND OTHER INFO/COMMENTS FOR DIVES BY CRUISE
          elif choice == 7:
             print('This function is not implemented yet...')
             continue
@@ -184,7 +208,7 @@ fish_codes = {
             #cursor.execute(SQL, cruise_id)
 
 
-    
+         ### NUMBER OF EACH ORGANISM SUBYTYPEBY DIVE
          elif choice == 8:
             response = input("\nEnter the dive directory (e.g., d20150917_1): ")
             dive = (response.strip(),)
@@ -202,9 +226,9 @@ fish_codes = {
                print(result, [x[0] for x in qreturn])
  
 
-        
+         ### NUMBER OF FISHCOUNT (FCT) FILES BY DIVE
          elif choice == 9:
-            ### TODO: report empty fct files (they have to get uploaded first, obviously, but seabed.py doesn't do this currently
+            ### TODO: report any empty fct files? (they have to get uploaded first, obviously, but seabed.py doesn't do this currently
             response = input("\nEnter the dive directory (e.g., d20150917_1): ")
             dive = (response.strip(),)
             SQL = "SELECT COUNT(distinct fct.originating_fct) FROM fct WHERE fct.dive_id=(select id from dive where directory = %s);"
@@ -215,7 +239,7 @@ fish_codes = {
             
 
 
-               
+         ### NUMBER OF IMAGES BY DIVE     
          elif choice == 10:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
@@ -225,7 +249,8 @@ fish_codes = {
             for row in qreturn:
                print(row[0])
 
-         
+  
+         ### IMAGES WITH MORE THAN N ORGANISMS       
          elif choice == 11:
             response = input("\nEnter minimum number of organisms: ")
             count = 1
@@ -240,7 +265,8 @@ fish_codes = {
                results.append(row[0])
             print(", ".join(results))
 
-         
+  
+         ### PRODUCE ORGANISM HISTOGRAM BY DIVE   
          elif choice == 12:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
@@ -289,10 +315,12 @@ fish_codes = {
                if org_type_list[idx][0] == 'not listed on Species lookup table':
                   print(org_type_list[idx][1])
 
-           ### option to update the DB with names from the Species lookup table
+           ### TODO: option to update the DB with names from the Species lookup table
            #print('Would you like to change a field in the database? [y/N]')
 
-         
+ 
+
+         ### DIVE AREA SURVEYED BY SUBSTRATE        
          elif choice == 13:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
@@ -325,11 +353,12 @@ fish_codes = {
                print(row[0])
 
          
+         ### PLOT CTD+OPTODE DATA (with QC stats)
          elif choice == 14:
             response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
             dive_dir = (response.strip(),)
             ### This gets the CTD data:
-            SQL="select ctd.rovtime, ctd.dive_id, ctd.sal, ctd.temp, ctd.pres, ctd.sos from ctd where ctd.dive_id=(select id from dive where directory = %s);"
+            SQL="select seabed.ctd.rovtime, seabed.ctd.dive_id, seabed.ctd.sal, seabed.ctd.temp, seabed.ctd.pres, seabed.ctd.sos from seabed.ctd where seabed.ctd.dive_id=(select seabed.dive.id from seabed.dive where seabed.dive.directory = %s);"
             cursor.execute(SQL, dive_dir)
             CTDqreturn = cursor.fetchall()
 
@@ -337,24 +366,30 @@ fish_codes = {
             ctd_sals = [x[2] for x in CTDqreturn]
             ctd_temps = [x[3] for x in CTDqreturn]
             ctd_depths = [x[4] for x in CTDqreturn]
-            ctd_soss = [x[5] for x in CTDqreturn]
+            #ctd_soss = [x[5] for x in CTDqreturn]
             
             ### This gets the OPTODE data:
-            SQL="select optode.rovtime, optode.psat, optode.conc from optode where optode.dive_id=(select id from dive where directory = %s);"
+            SQL="select seabed.optode.rovtime, seabed.optode.psat, seabed.optode.conc from seabed.optode where seabed.optode.dive_id=(select seabed.dive.id from seabed.dive where seabed.dive.directory = %s);"
             cursor.execute(SQL, dive_dir)
             OPTqreturn = cursor.fetchall()
 
             ### Now, we need to associate psat and conc to a depth, via a close rovtime  
             opt_times = [x[0] for x in OPTqreturn]
-            opt_psats = [x[1] for x in OPTqreturn]
+            #opt_psats = [x[1] for x in OPTqreturn]
             opt_concs = [x[2] for x in OPTqreturn]
  
             ### I think this is the best way to get nearest ctd time to optode time
+            # NOTE: opt_sals and opt_temps here are just subsets from ctd_[sals/temps] where the timestamp is closest
             opt_depths = []
+            opt_sals = []
+            opt_temps = []
+            print("Calculating times, salinities, and temperatures for the optode...")
             for ot in opt_times:
                time_diff = np.abs([date - ot for date in ctd_times])
                min_idx = time_diff.argmin(0)
                opt_depths.append(ctd_depths[min_idx])
+               opt_sals.append(ctd_sals[min_idx])
+               opt_temps.append(ctd_temps[min_idx])
 
 
             print("\nThis dive goes from ", min(ctd_depths),"m to ", max(ctd_depths), "m")
@@ -369,10 +404,14 @@ fish_codes = {
 
             opt_depths_logic = [val > min(depth_range) and val < max(depth_range) for val in opt_depths]
             opt_depths_trunc = [val for idx, val in enumerate(opt_depths) if opt_depths_logic[idx] == True]
-            opt_psats_trunc = [val for idx, val in enumerate(opt_psats) if opt_depths_logic[idx] == True]
+            #opt_psats_trunc = [val for idx, val in enumerate(opt_psats) if opt_depths_logic[idx] == True]
             opt_concs_trunc = [val for idx, val in enumerate(opt_concs) if opt_depths_logic[idx] == True]
+            opt_sals_trunc = [val for idx, val in enumerate(opt_sals) if opt_depths_logic[idx] == True]
+            opt_temps_trunc = [val for idx, val in enumerate(opt_temps) if opt_depths_logic[idx] == True]
             
+
             ### output some QA
+            # TEMPERATURE
             out_temps = []
             avg_temp = stat.mean(ctd_temps_trunc)
             sd2_temp = 2 * stat.stdev(ctd_temps_trunc)
@@ -385,6 +424,7 @@ fish_codes = {
                print("\nTemps recorded more than 2 SD from the mean: \n mean: ", avg_temp, "\n Anomalies: ", out_temps)
                hist(ctd_temps_trunc, 'Temperatures')        
 
+            # SALINITY
             out_sals = []
             avg_sal = stat.mean(ctd_sals_trunc)
             sd2_sal = 2 * stat.stdev(ctd_sals_trunc)
@@ -397,6 +437,24 @@ fish_codes = {
             if len(out_sals) > 0:           
                print("\nSalinities recorded more than 2 SD from the mean: \n mean: ", avg_sal, "\n Anomalies: ", out_sals)
                hist(ctd_sals_trunc,'Salinities')        
+
+            # O2 -- NOTE!!! We're using opt_concs_trunc, NOT opt_psats_trunc. ALSO, opt_depths_trunc is fine; no need to convert to pressure
+            out_O2s = []
+            O2s_cal = []
+            for idx in np.arange(0, len(opt_concs_trunc)):
+               O2s_cal.append(cal_O2(opt_concs_trunc[idx], opt_temps_trunc[idx], opt_sals_trunc[idx], opt_depths_trunc[idx]))
+
+            avg_O2s = stat.mean(O2s_cal)
+            sd2_O2s = 2 * stat.stdev(O2s_cal)
+            for O2 in O2s_cal:
+               if O2 > avg_O2s + sd2_O2s:
+                  out_O2s.append(O2)
+               elif O2 < avg_O2s - sd2_O2s:
+                  out_O2s.append(O2)
+ 
+            if len(out_O2s) > 0:           
+               print("\nO2 psats recorded more than 2 SD from the mean: \n mean: ", avg_O2s, "\n Anomalies: ", out_O2s)
+               hist(O2s_cal,'O2 psat (calibrated)')        
 
             fig, ax1 = plt.subplots()
             
@@ -416,34 +474,121 @@ fish_codes = {
             ### Gotta add O2 from 'OPTODE'. This is 'psat'
             ax3 = ax1.twiny()
             color = 'red'
-            ax3.set_xlabel('O2 (% saturation)', color=color)
-            ax3.plot(opt_psats_trunc, opt_depths_trunc, color=color, marker='.', linestyle='None')
+            ax3.set_xlabel('Calibrated O2 (uM)', color=color)
+            ax3.plot(O2s_cal, opt_depths_trunc, color=color, marker='.', linestyle='None')
             ax3.tick_params(axis='x', labelcolor=color, pad=30)
             
             plt.gca().invert_yaxis()
             plt.tight_layout()
             plt.show()
 
+
+
+
+         ### EXPORT MERGED FCT FILES WITH CTD+OPTODE DATA
+         elif choice == 15:
+            response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
+            dive_dir = (response.strip(),)
+            output_file = input("\nPlease enter an output file: ")
+            SQL="select * from seabed.fct where seabed.fct.dive_id=(select seabed.dive.id from seabed.dive where seabed.dive.directory = %s);"
+            cursor.execute(SQL, dive_dir)
+            FCTqreturn = cursor.fetchall()
+
+            #### Recycling code from query 14
+            ### This gets the CTD data:
+            SQL="select seabed.ctd.rovtime, seabed.ctd.dive_id, seabed.ctd.sal, seabed.ctd.temp, seabed.ctd.pres, seabed.ctd.sos from seabed.ctd where seabed.ctd.dive_id=(select seabed.dive.id from seabed.dive where seabed.dive.directory = %s);"
+            cursor.execute(SQL, dive_dir)
+            CTDqreturn = cursor.fetchall()
+
+            ctd_times = [x[0] for x in CTDqreturn]
+            ctd_sals = [x[2] for x in CTDqreturn]
+            ctd_temps = [x[3] for x in CTDqreturn]
+            ctd_depths = [x[4] for x in CTDqreturn]
+            #ctd_soss = [x[5] for x in CTDqreturn]
             
+            ### This gets the OPTODE data:
+            SQL="select seabed.optode.rovtime, seabed.optode.psat, seabed.optode.conc from seabed.optode where seabed.optode.dive_id=(select seabed.dive.id from seabed.dive where seabed.dive.directory = %s);"
+            cursor.execute(SQL, dive_dir)
+            OPTqreturn = cursor.fetchall()
+
+            ### Now, we need to associate psat and conc to a depth, via a close rovtime 
+            opt_times = [x[0] for x in OPTqreturn]
+            #opt_psats = [x[1] for x in OPTqreturn]
+            opt_concs = [x[2] for x in OPTqreturn]
+ 
+            ### I think this is the best way to get nearest ctd time to optode time
+            # NOTE: opt_sals and opt_temps here are just subsets from ctd_[sals/temps] where the timestamp is closest
+            opt_depths = []
+            opt_sals = []
+            opt_temps = []
+            print("Finding times, salinities, and temperatures for the optode...")
+            for ot in opt_times:
+               time_diff = np.abs([date - ot for date in ctd_times])
+               min_idx = time_diff.argmin(0)
+               opt_depths.append(ctd_depths[min_idx])
+               opt_sals.append(ctd_sals[min_idx])
+               opt_temps.append(ctd_temps[min_idx])
+
+  
+            ### Calibrate O2
+            print("Calibrating O2...")
+            out_O2s = []
+            O2s_cal = []
+            for idx in np.arange(0, len(opt_concs)):
+               O2s_cal.append(cal_O2(opt_concs[idx], opt_temps[idx], opt_sals[idx], opt_depths[idx]))
 
 
-         elif choice == 14:
+            ### Next we need to get the CTD+OPTODE data for each depth returned by the FCT query. These will be lists of the same length as FCTqreturn
+            fct_depths = [x[3] for x in FCTqreturn]
+
+            fct_temps = []
+            fct_sals = []
+            fct_O2s = []
+         
+            print("Finding CTD+OPTODE for each FCT depth...")
+            for f_depth in fct_depths:
+               depth_diff = np.abs([f_depth - o_depth for o_depth in opt_depths])
+               min_idx = depth_diff.argmin(0)
+               fct_temps.append(opt_temps[min_idx])
+               fct_sals.append(opt_sals[min_idx])
+               fct_O2s.append(O2s_cal[min_idx])
+
+
+            ### Make a list (to export to csv) of lists (each fct row, to which is appended CTD+OPTODE data)
+            fcts_list = []
+            for idx in np.arange(0, len(FCTqreturn)):
+               fct_row = list(FCTqreturn[idx])
+               fct_row.append(fct_temps[idx])
+               fct_row.append(fct_sals[idx])
+               fct_row.append(fct_O2s[idx])
+               fcts_list.append(fct_row)
+
+
+            ### Let's get the column names
+            ### TODO: does this need 'seabed' prepended to fct?
+            SQL = "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'fct';"
+            cursor.execute()
+            cols = [cols[i][0] for i in np.arange(0, len(cols))]
+            cols.append('temp')
+            cols.append('salinity')
+            cols.append('O2_calibrated')
+
+            with open(output_file, "w", newline="") as f:
+               writer = csv.writer(f)
+               writer.writerow(cols)
+               writer.writerows(fcts_list)
+
+
+
+         ### EXPORT ENTIRE DIVE
+         elif choice == 16:
+            print("Not implemented yet")
+            continue
             response = input("\nPlease enter an output directory with write permissions: ")
             output_dir = (response.strip(),)
             SQL="CREATE OR REPLACE FUNCTION db_to_csv(path TEXT) RETURNS void AS $$ declare tables RECORD;   statement TEXT; begin FOR tables IN SELECT (table_schema || '.' || table_name) AS schema_table FROM information_schema.tables t INNER JOIN information_schema.schemata s ON s.schema_name = t.table_schema WHERE t.table_schema NOT IN ('pg_catalog', 'information_schema') AND t.table_type NOT IN ('VIEW') ORDER BY schema_table LOOP statement := 'COPY ' || tables.schema_table || ' TO ''' || path || '/' || tables.schema_table || '.csv' ||''' DELIMITER '';'' CSV HEADER'; EXECUTE statement; END LOOP; return; end; $$ LANGUAGE plpgsql; SELECT db_to_csv(%s);"
             cursor.execute(SQL, output_dir)
 
-
-
-         elif choice == 15:
-            print("Not implemented yet...")
-            continue
-            response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
-            dive_dir = (response.strip(),)
-            response = input("\nPlease enter an output directory with write permissions: ")
-            output_dir = (response.strip(),)
-            SQL=""
-            cursor.execute(SQL, dive_dir)
 
 
       
