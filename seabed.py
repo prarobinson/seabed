@@ -20,16 +20,6 @@ from config import config
 
 
 
-### TODO: do we need to do this anymore?
-# TODO: do we need to use the parsed schema to insert the sysconfig data?
-
-# make any necessary adjustments to the data before storing to database
-#def adjust(nav_t):
-#   # duplicate the goal_str values for GOAL, e.g., [1, 2, 3] -> [1, 1, 2, 2, 3, 3]
-#   # the insert function conveniently makes it easy to do duplicates as we need
-#   data = nav_t["GOAL"][0,0]
-#   data["goal_str"] = numpy.insert(data["goal_str"], range(len(data["goal_str"])), data["goal_str"])
-
 
 def main(conn, tablemap, filemap, debug): 
    ### we can immediately pop the cruise, dive, and fct tables as those need to be done manually
@@ -95,7 +85,7 @@ def main(conn, tablemap, filemap, debug):
          ctlfiles = entry['ctls']
 
          ### get the start and end times for the metadata table (recall that the dicts are reverse-ordered)
-         ### TODO: start[end]time seems to be used to add this back into rovtime, from whence it was subtracted originally. Do we want unix time, or unix time - starttime? Or do we want diffrent things for different tables? For now, we'll just use unix time and calculate elapsed time in any queries.
+         ### NOTE: start[end]time seems to be used to add this back into rovtime, from whence it was subtracted originally. Do we want unix time, or unix time - starttime? Or do we want diffrent things for different tables? For now, we'll just use unix time and calculate elapsed time in any queries.
          first_ctl = open(os.path.join(root, ctlfiles[len(ctlfiles)-1]), 'r')
          first_time = first_ctl.readline().split()[1]
          starttime = datetime.utcfromtimestamp(float(first_time))
@@ -227,43 +217,70 @@ def main(conn, tablemap, filemap, debug):
 
 
          ### handle FCT files
-         ### TODO: identify and automatically skip duplicate lines? For now they simply fail and we press on...
          fctfiles = entry.get("fcts", None)
          if fctfiles and len(fctfiles) > 0:
             print("Processing %d fct file(s)" % len(fctfiles),)
             start = time.time()
-            
+                   
+            ### Set up SQL commands for various fct file formats
+
+
             for filename in fctfiles:
                this_file = os.path.join(root, filename)
                mod_date_epoch = os.path.getmtime(this_file)
                mod_date = time.ctime(mod_date_epoch)
-               with open(os.path.join(root, filename), "r", encoding="latin-1") as fctfile:
-                  ### TODO: if there are only empty lines nothing is put in the DB; do we want to capture that this empty fct file exists, so it can be queried later?
+               with open(this_file, "r", encoding="latin-1") as fctfile:
+                  ### TODO: identify and automatically skip duplicate lines? For now they simply fail and we press on...
                   for line in fctfile:
                      line = line.strip()
                      
                      if len(line) == 0:
+                        print(filename, " has empty lines!")
                         continue
                      
                      parts = line.split(",")
-                     if len(parts) != 18:
-                        continue
-                     
-                     ### sometimes the parts are empty which fails when cast to a number so fix those
+                     ### sometimes the fields are empty (which fails when cast to a number), so fix those
                      for i, part in enumerate(parts):
-                        if (i in [0, 1, 2, 6, 7, 8, 13, 14, 15, 16]) and len(part) == 0:
+                        if len(part) == 0:
                            parts[i] = "nan"
-                     
-                     try:
-                     ### getting a lot of these: "not all arguments converted during string formatting" after adding filename...
-                        SQL = 'INSERT INTO seabed.fct (dive_id, latitude, longitude, depth, originating_fct, filename, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, org_x, org_y, org_length, org_area, mod_date, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-                        cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), float(parts[2]), str(fctfile.name), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y/%m/%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), mod_date, parts[17]))
-                     except Exception as e:
-                        print("\nProblem entering FCT file", filename, "because:", e,)
-                        conn.rollback()
-                     else:
-                        conn.commit()
-                        continue
+
+
+                     #######    HANDLE DIFFERENT FCT FILE FORMATS BASED ON THE NUMBER OF FIELDS HERE  ##################
+                     ### 12RB version: 0.3.8
+                     if len(parts) == 18:
+                        ### put in a proper psql date
+                        parts[4] = parts[4].replace('/', '-')
+
+                        try:
+                        ### getting a lot of these: "not all arguments converted during string formatting" after adding filename...
+                           SQL = 'INSERT INTO seabed.fct (dive_id, latitude, longitude, depth, originating_fct, image_name, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, pos_x, pos_y, org_length, org_area, mod_date, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                           cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), float(parts[2]), str(fctfile.name), parts[3], datetime.strptime("%s %s" % (parts[4], parts[5]), "%Y-%m-%d %H:%M:%S.%f"), float(parts[6]), int(parts[7]), int(parts[8]), parts[9], parts[10], parts[11], parts[12], float(parts[13]), float(parts[14]), float(parts[15]), float(parts[16]), mod_date, parts[17]))
+                        except Exception as e:
+                           print("\nProblem entering FCT file", filename, "because:", e,)
+                           conn.rollback()
+                        else:
+                           conn.commit()
+                           continue
+
+
+                     ### 12RB version: Dec 2020
+                     if len(parts) == 42:
+                        ### put in a proper psql date
+                        parts[8] = parts[8].replace('/', '-')
+
+                        try:
+                        ### getting a lot of these: "not all arguments converted during string formatting" after adding filename...
+                           SQL = 'INSERT INTO seabed.fct (dive_id, ver_12rb, ver_fct, analyst, latitude, longitude, depth, originating_fct, stereo_cal_file, image_name, time, img_area, img_width, img_height, substrate, org_type, org_subtype, index, pos_x, pos_y, head_x_px_port, head_y_px_port, head_x_world_port, head_y_world_port, head_z_world_port, tail_x_px_port, tail_y_px_port, tail_x_world_port, tail_y_world_port, tail_z_world_port, head_x_px_stbd, head_y_px_stbd, head_x_world_stbd, head_y_world_stbd, head_z_world_stbdt, tail_x_px_stbd, tail_y_px_stbd, tail_x_world_stbd, tail_y_world_stbd, tail_z_world_stbd, org_length, org_area, mod_date, comment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                           cursor.execute(SQL, (diveid, float(parts[0]), float(parts[1]), parts[2], float(parts[3]), float(parts[4]), float(parts[5]), str(fctfile.name), parts[7], datetime.strptime("%s %s" % (parts[8], parts[9]), "%Y-%m-%d %H:%M:%S.%f"), float(parts[10]), float(parts[11]), float(parts[12]), parts[13], parts[14], parts[15], float(parts[16]), float(parts[17]), float(parts[18]), float(parts[19]), float(parts[20]), float(parts[21]), float(parts[22]), float(parts[23]), float(parts[24]), float(parts[25]), float(parts[26]), float(parts[27]), float(parts[28]), float(parts[29]), float(parts[30]), float(parts[31]), float(parts[32]), float(parts[33]), float(parts[34]), float(parts[35]), float(parts[36]), float(parts[37]), float(parts[38]), float(parts[39]), float(parts[40]), mod_date, parts[41]))
+                        except Exception as e:
+                           print("\nProblem entering FCT file", filename, "because:", e,)
+                           conn.rollback()
+                        else:
+                           conn.commit()
+                           continue
+
+
+
 
             secs = time.time() - start
             print("(%.1fs)" % secs)

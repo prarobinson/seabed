@@ -5,7 +5,7 @@ from configparser import ConfigParser
 ### NOTE!!! YOU WILL NEED TO CHANGE database.ini TO database_local.ini IN ORDER TO USE THE LOCALHOST
 def config(filename='database_local.ini', section='postgresql'):
     # create a parser
-    print("Using ",filename,". Please edit config.py to point at database_local.ini to use a local database, or database.ini for a remote server.")
+    print("Using",filename,"-- Please edit config.py to point at database_local.ini to use a local database, or database.ini for a remote server.")
     parser = ConfigParser()
     # read config file
     parser.read(filename)
