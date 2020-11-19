@@ -185,10 +185,11 @@ fish_codes = {
 
 
          ### DUMP DATABASE TO .CSV FILES
-         ### TODO: edit this to accommodate seabed. prefix
+         ### TODO: This seems to work, but do we need to edit it to accommodate the "seabed" prefix?
          elif choice == 6:
-            response = input("\nPlease enter an output directory with write permissions: ")
+            response = input("\nPlease enter an output directory with write permissions (full path name): ")
             output_dir = (response.strip(),)
+            print("Exporting to ", output_dir[0])
             SQL="CREATE OR REPLACE FUNCTION db_to_csv(path TEXT) RETURNS void AS $$ declare tables RECORD;   statement TEXT; begin FOR tables IN SELECT (table_schema || '.' || table_name) AS schema_table FROM information_schema.tables t INNER JOIN information_schema.schemata s ON s.schema_name = t.table_schema WHERE t.table_schema NOT IN ('pg_catalog', 'information_schema') AND t.table_type NOT IN ('VIEW') ORDER BY schema_table LOOP statement := 'COPY ' || tables.schema_table || ' TO ''' || path || '/' || tables.schema_table || '.csv' ||''' DELIMITER '';'' CSV HEADER'; EXECUTE statement; END LOOP; return; end; $$ LANGUAGE plpgsql; SELECT db_to_csv(%s);"
             cursor.execute(SQL, output_dir)
 
@@ -228,7 +229,7 @@ fish_codes = {
 
          ### NUMBER OF FISHCOUNT (FCT) FILES BY DIVE
          elif choice == 9:
-            ### TODO: report any empty fct files? (they have to get uploaded first, obviously, but seabed.py doesn't do this currently
+            ### TODO: should we report any empty fct files? (they have to get uploaded first, obviously, but seabed.py doesn't do this currently)
             response = input("\nEnter the dive directory (e.g., d20150917_1): ")
             dive = (response.strip(),)
             SQL = "SELECT COUNT(distinct fct.originating_fct) FROM fct WHERE fct.dive_id=(select id from dive where directory = %s);"
@@ -584,13 +585,29 @@ fish_codes = {
          elif choice == 16:
             print("Not implemented yet")
             continue
-            response = input("\nPlease enter an output directory with write permissions: ")
-            output_dir = (response.strip(),)
-            SQL="CREATE OR REPLACE FUNCTION db_to_csv(path TEXT) RETURNS void AS $$ declare tables RECORD;   statement TEXT; begin FOR tables IN SELECT (table_schema || '.' || table_name) AS schema_table FROM information_schema.tables t INNER JOIN information_schema.schemata s ON s.schema_name = t.table_schema WHERE t.table_schema NOT IN ('pg_catalog', 'information_schema') AND t.table_type NOT IN ('VIEW') ORDER BY schema_table LOOP statement := 'COPY ' || tables.schema_table || ' TO ''' || path || '/' || tables.schema_table || '.csv' ||''' DELIMITER '';'' CSV HEADER'; EXECUTE statement; END LOOP; return; end; $$ LANGUAGE plpgsql; SELECT db_to_csv(%s);"
-            cursor.execute(SQL, output_dir)
+            response = input("\nPlease enter a dive directory (e.g., d20150917_1): ")
+            dive_dir = (response.strip(),)
+            output_dir = input("\nPlease enter an output directory with write permissions: ")
+            output_dir = os.path.join(output_dir, response)
+            ### TODO: Get table names from the DB instead of hard-coding
+            tables = ["","","",""]
+            for tbl in tables:
+               SQL="SELECT * FROM {} WHERE {}.dive_id=(select seabed.dive.id from seabed.dive where seabed.dive.directory = %s);".format(tbl, tbl)
+               cursor.execute(SQL, dive_dir)
+               qreturn = cursor.fetchall()
+               ### Extract the table headers.
+               headers = [i[0] for i in cursor.description]
+               fileName = tbl + '.csv'
+               csvFile = csv.writer(open(os.path.join(output_dir, fileName), 'w', newline=''),
+                             delimiter=',', lineterminator='\r\n',
+                             quoting=csv.QUOTE_ALL, escapechar='\\')
 
+               ### Add the headers and data to the csvs file.
+               csvFile.writerow(headers)
+               csvFile.writerows(qreturn)
+               
 
-
+ 
       
    finally:
       conn.close()

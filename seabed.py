@@ -238,7 +238,7 @@ def main(conn, tablemap, filemap, debug):
                mod_date_epoch = os.path.getmtime(this_file)
                mod_date = time.ctime(mod_date_epoch)
                with open(os.path.join(root, filename), "r", encoding="latin-1") as fctfile:
-                  ### TODO: if there are no non-empty lines nothing is put in the DB;do we want to capture that this empty fct file exists, so it can be queried later?
+                  ### TODO: if there are only empty lines nothing is put in the DB; do we want to capture that this empty fct file exists, so it can be queried later?
                   for line in fctfile:
                      line = line.strip()
                      
